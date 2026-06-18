@@ -30,14 +30,35 @@ export default function ConfigurarMesasPage() {
   const [formMesa, setFormMesa] = useState({ nombre: '', capacidad: '2' })
 
   const [guardando, setGuardando] = useState(false)
-  const [copiado, setCopiado] = useState<string | null>(null)
+  const [modalQR, setModalQR] = useState<{ nombre: string; url: string } | null>(null)
 
-  const copiarQR = (mesaId: string) => {
-    const link = linkMesa(localId!, mesaId)
-    navigator.clipboard.writeText(link).then(() => {
-      setCopiado(mesaId)
-      setTimeout(() => setCopiado(null), 2000)
-    })
+  const abrirQR = (mesa: Mesa) => {
+    const url = linkMesa(localId!, mesa.id)
+    setModalQR({ nombre: mesa.nombre, url })
+  }
+
+  const imprimirQR = () => {
+    const ventana = window.open('', '_blank')
+    if (!ventana || !modalQR) return
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(modalQR.url)}`
+    ventana.document.write(`
+      <html><head><title>QR ${modalQR.nombre}</title>
+      <style>
+        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; background: #fff; }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        p { color: #666; font-size: 14px; margin-bottom: 24px; }
+        img { width: 300px; height: 300px; }
+        @media print { button { display: none; } }
+      </style></head>
+      <body>
+        <h1>${modalQR.nombre}</h1>
+        <p>Escaneá para ver el menú y pedir</p>
+        <img src="${qrSrc}" />
+        <br/><br/>
+        <button onclick="window.print()" style="padding:12px 24px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer">Imprimir</button>
+      </body></html>
+    `)
+    ventana.document.close()
   }
 
   useEffect(() => { if (localId) cargarDatos() }, [localId])
@@ -159,10 +180,10 @@ export default function ConfigurarMesasPage() {
                         </div>
                         <div className="flex gap-3 items-center">
                           <button
-                            onClick={() => copiarQR(m.id)}
-                            className={`text-xs font-medium transition ${copiado === m.id ? 'text-green-400' : 'text-violet-400 hover:text-violet-300'}`}
+                            onClick={() => abrirQR(m)}
+                            className="text-xs font-medium text-violet-400 hover:text-violet-300 transition"
                           >
-                            {copiado === m.id ? '✓ Copiado' : '🔗 QR'}
+                            📱 QR
                           </button>
                           <button onClick={() => abrirEditMesa(m)} className="text-xs text-gray-400 hover:text-white transition">Editar</button>
                           <button onClick={() => eliminarMesa(m.id)} className="text-xs text-red-400 hover:text-red-300 transition">Eliminar</button>
@@ -231,6 +252,44 @@ export default function ConfigurarMesasPage() {
               <button onClick={() => setModalMesa(false)} className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition">Cancelar</button>
               <button onClick={guardarMesa} disabled={!formMesa.nombre.trim() || guardando} className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-semibold rounded-xl py-3 text-sm transition">
                 {guardando ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR */}
+      {modalQR && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl text-center">
+            <h3 className="text-lg font-bold text-white mb-1">{modalQR.nombre}</h3>
+            <p className="text-xs text-gray-400 mb-5">Escaneá para ver el menú y pedir</p>
+
+            {/* QR generado via API pública */}
+            <div className="bg-white rounded-2xl p-4 inline-block mb-5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(modalQR.url)}`}
+                alt={`QR ${modalQR.nombre}`}
+                width={220}
+                height={220}
+              />
+            </div>
+
+            <p className="text-xs text-gray-600 break-all mb-5">{modalQR.url}</p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setModalQR(null)}
+                className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={imprimirQR}
+                className="flex-1 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl py-3 text-sm transition"
+              >
+                🖨️ Imprimir
               </button>
             </div>
           </div>
