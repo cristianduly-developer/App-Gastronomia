@@ -5,6 +5,11 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
+function linkMesa(localId: string, mesaId: string) {
+  if (typeof window === 'undefined') return ''
+  return `${window.location.origin}/menu/${localId}/mesa/${mesaId}`
+}
+
 interface Sector { id: string; nombre: string; orden: number }
 interface Mesa { id: string; sector_id: string; nombre: string; capacidad: number }
 
@@ -143,7 +148,14 @@ export default function ConfigurarMesasPage() {
                           <span className="text-sm font-medium text-white">{m.nombre}</span>
                           <span className="text-xs text-gray-500 ml-2">{m.capacidad} pers.</span>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 items-center">
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(linkMesa(localId!, m.id)) }}
+                            title="Copiar link QR de esta mesa"
+                            className="text-xs text-violet-400 hover:text-violet-300 transition"
+                          >
+                            QR
+                          </button>
                           <button onClick={() => abrirEditMesa(m)} className="text-xs text-gray-400 hover:text-white transition">Editar</button>
                           <button onClick={() => eliminarMesa(m.id)} className="text-xs text-red-400 hover:text-red-300 transition">Eliminar</button>
                         </div>

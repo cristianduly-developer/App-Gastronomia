@@ -12,6 +12,7 @@ interface Config {
   usa_delivery: boolean
   usa_cocina: boolean
   usa_qr: boolean
+  usa_qr_pedidos: boolean
 }
 
 const TIPO_LABELS: Record<string, string> = {
@@ -46,13 +47,14 @@ export default function ConfiguracionPage() {
       .then(({ data }) => {
         if (data) {
           const c: Config = {
-            nombre_negocio: data.nombre_negocio ?? '',
-            tipo_negocio:   data.tipo_negocio ?? '',
-            telefono:       data.telefono ?? '',
-            usa_mesas:      data.usa_mesas ?? false,
-            usa_delivery:   data.usa_delivery ?? false,
-            usa_cocina:     data.usa_cocina ?? false,
-            usa_qr:         data.usa_qr ?? false,
+            nombre_negocio:  data.nombre_negocio ?? '',
+            tipo_negocio:    data.tipo_negocio ?? '',
+            telefono:        data.telefono ?? '',
+            usa_mesas:       data.usa_mesas ?? false,
+            usa_delivery:    data.usa_delivery ?? false,
+            usa_cocina:      data.usa_cocina ?? false,
+            usa_qr:          data.usa_qr ?? false,
+            usa_qr_pedidos:  data.usa_qr_pedidos ?? false,
           }
           setConfig(c)
           setForm(c)
@@ -69,8 +71,9 @@ export default function ConfiguracionPage() {
       telefono:       form.telefono,
       usa_mesas:      form.usa_mesas,
       usa_delivery:   form.usa_delivery,
-      usa_cocina:     form.usa_cocina,
-      usa_qr:         form.usa_qr,
+      usa_cocina:      form.usa_cocina,
+      usa_qr:          form.usa_qr,
+      usa_qr_pedidos:  form.usa_qr_pedidos,
     }).eq('local_id', localId)
     setConfig(form)
     setGuardando(false)
@@ -150,7 +153,8 @@ export default function ConfiguracionPage() {
             { key: 'usa_mesas',    emoji: '🪑', label: 'Mesas / comedor',   desc: 'Gestión visual de salón y comandas' },
             { key: 'usa_delivery', emoji: '🛵', label: 'Delivery',           desc: 'Pedidos para envío a domicilio' },
             { key: 'usa_cocina',   emoji: '👨‍🍳', label: 'Monitor de cocina', desc: 'Pantalla en cocina con pedidos en tiempo real' },
-            { key: 'usa_qr',       emoji: '📱', label: 'Menú QR',            desc: 'Los clientes ven la carta desde su celu' },
+            { key: 'usa_qr',         emoji: '📱', label: 'Menú QR',                desc: 'Los clientes ven la carta desde su celu' },
+            { key: 'usa_qr_pedidos', emoji: '🛒', label: 'Pedidos desde el QR',    desc: 'Los clientes pueden pedir desde la carta, el mozo confirma' },
           ] as const).map(({ key, emoji, label, desc }) => (
             <button
               key={key}
@@ -175,34 +179,44 @@ export default function ConfiguracionPage() {
 
         {/* Link menú QR */}
         {form.usa_qr && (
-          <section className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
-            <h2 className="font-semibold text-white">Menú QR público</h2>
-            <p className="text-xs text-gray-400">
-              Compartí este link o generá un QR para que tus clientes vean la carta desde el celu.
-            </p>
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                readOnly
-                value={menuUrl}
-                className="flex-1 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl px-4 py-3 text-xs focus:outline-none"
-                onClick={() => inputRef.current?.select()}
-              />
-              <button
-                onClick={copiarLink}
-                className="px-4 py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-xl transition flex-shrink-0"
-              >
-                {copiado ? '✓ Copiado' : 'Copiar'}
-              </button>
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+            <h2 className="font-semibold text-white">Menú QR</h2>
+
+            <div>
+              <p className="text-xs text-gray-400 mb-2">
+                Link de la carta — compartilo o generá un QR para que tus clientes la vean desde el celu.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  readOnly
+                  value={menuUrl}
+                  className="flex-1 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl px-4 py-3 text-xs focus:outline-none"
+                  onClick={() => inputRef.current?.select()}
+                />
+                <button
+                  onClick={copiarLink}
+                  className="px-4 py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-xl transition flex-shrink-0"
+                >
+                  {copiado ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+              <a href={menuUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 transition mt-2">
+                Ver carta ↗
+              </a>
             </div>
-            <a
-              href={menuUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs text-violet-400 hover:text-violet-300 transition"
-            >
-              Ver menú ↗
-            </a>
+
+            {form.usa_qr_pedidos && (
+              <div className="border-t border-gray-800 pt-4">
+                <p className="text-xs text-gray-400 mb-1">
+                  Los QR por mesa incluyen la mesa en el link. Generalos desde{' '}
+                  <a href="/mesas/configurar" className="text-violet-400 hover:text-violet-300 transition">Configurar mesas ↗</a>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Formato: <code className="text-gray-400">/menu/{'{localId}'}/mesa/{'{mesaId}'}</code>
+                </p>
+              </div>
+            )}
           </section>
         )}
 
