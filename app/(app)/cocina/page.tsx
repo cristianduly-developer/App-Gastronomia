@@ -1,8 +1,37 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+
+function useWakeLock() {
+  const lockRef = useRef<WakeLockSentinel | null>(null)
+  const [activo, setActivo] = useState(false)
+
+  const activar = useCallback(async () => {
+    if (!('wakeLock' in navigator)) return
+    try {
+      lockRef.current = await (navigator as any).wakeLock.request('screen')
+      setActivo(true)
+      lockRef.current.addEventListener('release', () => setActivo(false))
+    } catch { /* navegador no lo permite */ }
+  }, [])
+
+  const desactivar = useCallback(() => {
+    lockRef.current?.release()
+    lockRef.current = null
+    setActivo(false)
+  }, [])
+
+  // Re-activar si la página vuelve al foco (ej: el user cambia de tab y vuelve)
+  useEffect(() => {
+    const handler = () => { if (activo) activar() }
+    document.addEventListener('visibilitychange', handler)
+    return () => document.removeEventListener('visibilitychange', handler)
+  }, [activo, activar])
+
+  return { activo, activar, desactivar }
+}
 
 interface ItemCocina {
   id: string
@@ -44,6 +73,7 @@ export default function CocinaPage() {
   const [loading, setLoading] = useState(true)
   const [tick, setTick] = useState(0)
   const [cambiando, setCambiando] = useState<Set<string>>(new Set())
+  const { activo: wakeLockActivo, activar: activarWakeLock, desactivar: desactivarWakeLock } = useWakeLock()
 
   const cargarItems = useCallback(async () => {
     // Traer items pendiente/en_preparacion/listo con info de mesa via comanda
@@ -133,9 +163,21 @@ export default function CocinaPage() {
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <h1 className="text-2xl font-bold text-white">Monitor de cocina</h1>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs text-gray-400">En tiempo real</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs text-gray-400">En tiempo real</span>
+            </div>
+            <button
+              onClick={wakeLockActivo ? desactivarWakeLock : activarWakeLock}
+              title={wakeLockActivo ? 'Desactivar pantalla siempre activa' : 'Mantener pantalla encendida'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition
+                ${wakeLockActivo
+                  ? 'bg-green-900 text-green-300 border border-green-700'
+                  : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+            >
+              {wakeLockActivo ? '☀️ Pantalla activa' : '💤 Mantener pantalla'}
+            </button>
           </div>
         </div>
 
