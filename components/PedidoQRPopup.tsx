@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { type PedidoQR } from '@/hooks/usePedidosQR'
+import { type PedidoQR } from '@/context/PedidosQRContext'
 
 interface Props {
   pedido: PedidoQR

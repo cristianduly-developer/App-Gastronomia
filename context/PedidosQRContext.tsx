@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -11,7 +11,21 @@ export interface PedidoQR {
   created_at: string
 }
 
-export function usePedidosQR() {
+interface PedidosQRCtx {
+  pendientes: PedidoQR[]
+  nuevoPedido: PedidoQR | null
+  cerrarNuevo: () => void
+  total: number
+}
+
+const Ctx = createContext<PedidosQRCtx>({
+  pendientes: [],
+  nuevoPedido: null,
+  cerrarNuevo: () => {},
+  total: 0,
+})
+
+export function PedidosQRProvider({ children }: { children: ReactNode }) {
   const { localId } = useSession()
   const [pendientes, setPendientes] = useState<PedidoQR[]>([])
   const [nuevoPedido, setNuevoPedido] = useState<PedidoQR | null>(null)
@@ -32,15 +46,12 @@ export function usePedidosQR() {
     cargar()
 
     const channel = supabaseApp
-      .channel('pedidos-qr-hook')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'pedidos_qr' },
+      .channel('pedidos-qr-global')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos_qr' },
         (payload) => {
           const nuevo = payload.new as PedidoQR
           setPendientes((prev) => [...prev, nuevo])
           setNuevoPedido(nuevo)
-          // Sonido de notificación
           try {
             const ctx = new AudioContext()
             const osc = ctx.createOscillator()
@@ -53,14 +64,10 @@ export function usePedidosQR() {
             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
             osc.start(ctx.currentTime)
             osc.stop(ctx.currentTime + 0.4)
-          } catch {
-            // silencioso si el browser bloquea audio
-          }
+          } catch { /* browser bloqueó audio */ }
         }
       )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'pedidos_qr' },
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos_qr' },
         () => cargar()
       )
       .subscribe()
@@ -68,7 +75,18 @@ export function usePedidosQR() {
     return () => { supabaseApp.removeChannel(channel) }
   }, [localId, cargar])
 
-  const cerrarNuevo = () => setNuevoPedido(null)
+  return (
+    <Ctx.Provider value={{
+      pendientes,
+      nuevoPedido,
+      cerrarNuevo: () => setNuevoPedido(null),
+      total: pendientes.length,
+    }}>
+      {children}
+    </Ctx.Provider>
+  )
+}
 
-  return { pendientes, nuevoPedido, cerrarNuevo, total: pendientes.length }
+export function usePedidosQR() {
+  return useContext(Ctx)
 }

@@ -5,7 +5,7 @@ import { useSession } from '@/lib/sessionStore'
 import { usePermisos } from '@/hooks/usePermisos'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { DemoBanner } from './DemoBanner'
-import { usePedidosQR } from '@/hooks/usePedidosQR'
+import { usePedidosQR } from '@/context/PedidosQRContext'
 
 const NAV_ITEMS = [
   { href: '/dashboard',     label: 'Dashboard',    emoji: '📊', permiso: 'verDashboard' },
