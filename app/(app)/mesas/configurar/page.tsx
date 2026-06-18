@@ -30,6 +30,15 @@ export default function ConfigurarMesasPage() {
   const [formMesa, setFormMesa] = useState({ nombre: '', capacidad: '2' })
 
   const [guardando, setGuardando] = useState(false)
+  const [copiado, setCopiado] = useState<string | null>(null)
+
+  const copiarQR = (mesaId: string) => {
+    const link = linkMesa(localId!, mesaId)
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiado(mesaId)
+      setTimeout(() => setCopiado(null), 2000)
+    })
+  }
 
   useEffect(() => { if (localId) cargarDatos() }, [localId])
 
@@ -150,11 +159,10 @@ export default function ConfigurarMesasPage() {
                         </div>
                         <div className="flex gap-3 items-center">
                           <button
-                            onClick={() => { navigator.clipboard.writeText(linkMesa(localId!, m.id)) }}
-                            title="Copiar link QR de esta mesa"
-                            className="text-xs text-violet-400 hover:text-violet-300 transition"
+                            onClick={() => copiarQR(m.id)}
+                            className={`text-xs font-medium transition ${copiado === m.id ? 'text-green-400' : 'text-violet-400 hover:text-violet-300'}`}
                           >
-                            QR
+                            {copiado === m.id ? '✓ Copiado' : '🔗 QR'}
                           </button>
                           <button onClick={() => abrirEditMesa(m)} className="text-xs text-gray-400 hover:text-white transition">Editar</button>
                           <button onClick={() => eliminarMesa(m.id)} className="text-xs text-red-400 hover:text-red-300 transition">Eliminar</button>
