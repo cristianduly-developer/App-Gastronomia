@@ -52,7 +52,7 @@ export default function OnboardingPage() {
     })
 
     setSession({ nombreNegocio: form.nombre, onboardingCompleto: true })
-    router.push('/')
+    router.push('/dashboard')
   }
 
   return (

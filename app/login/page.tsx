@@ -107,7 +107,7 @@ export default function LoginPage() {
       if (!config?.onboarding_completo) {
         router.push('/onboarding')
       } else {
-        router.push('/')
+        router.push('/dashboard')
       }
     } catch {
       setError('Error al verificar acceso. Intentá de nuevo.')

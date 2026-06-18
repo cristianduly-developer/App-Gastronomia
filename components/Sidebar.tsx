@@ -7,7 +7,7 @@ import { supabaseApp } from '@/lib/supabaseApp'
 import { DemoBanner } from './DemoBanner'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Dashboard', emoji: '📊', permiso: 'verDashboard' },
+  { href: '/dashboard', label: 'Dashboard', emoji: '📊', permiso: 'verDashboard' },
   { href: '/ventas', label: 'Ventas', emoji: '💰', permiso: 'verVentas' },
   { href: '/mesas', label: 'Mesas', emoji: '🪑', permiso: 'verMesas' },
   { href: '/pedidos', label: 'Pedidos', emoji: '📋', permiso: 'verComandas' },
