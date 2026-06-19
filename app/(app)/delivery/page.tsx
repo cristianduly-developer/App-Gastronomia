@@ -74,6 +74,8 @@ export default function DeliveryPage() {
   const [retiraEnLocal, setRetiraEnLocal] = useState(false)
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
   const [guardando, setGuardando] = useState(false)
+  const [clienteSugerido, setClienteSugerido] = useState<{ id: string; nombre: string; telefono: string; observaciones: string | null } | null>(null)
+  const [buscandoCliente, setBuscandoCliente] = useState(false)
 
   const cargar = useCallback(async () => {
     const { data } = await supabaseApp
@@ -112,6 +114,33 @@ export default function DeliveryPage() {
     cargar()
   }
 
+  const buscarClientePorTel = async (tel: string) => {
+    setClienteSugerido(null)
+    if (tel.length < 6) return
+    setBuscandoCliente(true)
+    const { data } = await supabaseApp
+      .from('clientes')
+      .select('id, nombre, telefono, observaciones')
+      .eq('local_id', localId)
+      .eq('activo', true)
+      .ilike('telefono', `%${tel}%`)
+      .limit(1)
+      .maybeSingle()
+    setClienteSugerido(data ?? null)
+    setBuscandoCliente(false)
+  }
+
+  const aplicarClienteSugerido = () => {
+    if (!clienteSugerido) return
+    setCliente((c) => ({
+      ...c,
+      nombre: clienteSugerido.nombre,
+      tel: clienteSugerido.telefono ?? c.tel,
+      obs: clienteSugerido.observaciones ?? c.obs,
+    }))
+    setClienteSugerido(null)
+  }
+
   // Cargar carta para modal manual
   const abrirModalNuevo = async () => {
     const [{ data: cats }, { data: prods }] = await Promise.all([
@@ -125,6 +154,7 @@ export default function DeliveryPage() {
     setCliente({ nombre: '', tel: '', dir: '', obs: '' })
     setRetiraEnLocal(false)
     setMetodoPago('efectivo')
+    setClienteSugerido(null)
     setModalNuevo(true)
   }
 
@@ -190,6 +220,29 @@ export default function DeliveryPage() {
 
     if (errorItems) {
       alert(`Error al guardar los items: ${errorItems.message}`)
+    }
+
+    // Guardar/actualizar cliente
+    if (cliente.tel.trim()) {
+      const { data: clienteExistente } = await supabaseApp
+        .from('clientes')
+        .select('id')
+        .eq('local_id', localId)
+        .eq('telefono', cliente.tel.trim())
+        .maybeSingle()
+      if (clienteExistente) {
+        await supabaseApp.from('clientes').update({
+          nombre: cliente.nombre.trim(),
+          observaciones: cliente.obs.trim() || null,
+        }).eq('id', clienteExistente.id)
+      } else {
+        await supabaseApp.from('clientes').insert({
+          local_id: localId,
+          nombre: cliente.nombre.trim(),
+          telefono: cliente.tel.trim(),
+          observaciones: cliente.obs.trim() || null,
+        })
+      }
     }
 
     setGuardando(false)
@@ -356,10 +409,32 @@ export default function DeliveryPage() {
                   <input
                     type="tel"
                     value={cliente.tel}
-                    onChange={(e) => setCliente((c) => ({ ...c, tel: e.target.value }))}
+                    onChange={(e) => {
+                      setCliente((c) => ({ ...c, tel: e.target.value }))
+                      buscarClientePorTel(e.target.value)
+                    }}
                     placeholder="Ej: 2235001234"
                     className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
                   />
+                  {buscandoCliente && (
+                    <p className="text-xs text-gray-500 mt-1">Buscando...</p>
+                  )}
+                  {clienteSugerido && (
+                    <button
+                      type="button"
+                      onClick={aplicarClienteSugerido}
+                      className="mt-1.5 w-full flex items-center gap-2 bg-violet-950 border border-violet-700 rounded-xl px-3 py-2 text-left hover:bg-violet-900 transition"
+                    >
+                      <span className="text-violet-400 text-sm">👤</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-violet-300">{clienteSugerido.nombre}</p>
+                        {clienteSugerido.observaciones && (
+                          <p className="text-xs text-violet-500 truncate">{clienteSugerido.observaciones}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-violet-400 flex-shrink-0">Usar →</span>
+                    </button>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs text-gray-400 mb-1.5">Dirección</label>
