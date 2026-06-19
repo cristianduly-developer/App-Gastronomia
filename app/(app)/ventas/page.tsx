@@ -61,6 +61,7 @@ export default function VentasPage() {
   const [historial, setHistorial] = useState<VentaHistorial[]>([])
   const [loadingHistorial, setLoadingHistorial] = useState(false)
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
 
   const cargarHistorial = async () => {
     setLoadingHistorial(true)
@@ -235,18 +236,18 @@ export default function VentasPage() {
       )}
 
       {/* VENTA RÁPIDA */}
-      {tab === 'venta' && <div className="flex gap-6 h-[calc(100vh-8rem)]">
+      {tab === 'venta' && <div className="flex gap-6 h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)]">
 
         {/* Panel izquierdo — productos */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-white">Venta rápida</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">Venta rápida</h1>
             <input
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar producto..."
-              className="bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500 w-48"
+              placeholder="Buscar..."
+              className="bg-gray-900 border border-gray-700 text-white rounded-xl px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500 w-32 md:w-48"
             />
           </div>
 
@@ -316,8 +317,8 @@ export default function VentasPage() {
           </div>
         </div>
 
-        {/* Panel derecho — carrito */}
-        <div className="w-72 flex flex-col bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        {/* Panel derecho — carrito (solo desktop) */}
+        <div className="hidden md:flex w-72 flex-col bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
           <div className="p-4 border-b border-gray-800">
             <h2 className="font-bold text-white">Detalle de venta</h2>
           </div>
@@ -393,6 +394,77 @@ export default function VentasPage() {
           </div>
         </div>
       </div>}
+
+      {/* ── MOBILE: botón flotante carrito ── */}
+      {tab === 'venta' && carrito.length > 0 && !exito && (
+        <div className="fixed bottom-20 left-4 right-4 z-30 md:hidden">
+          <button
+            onClick={() => setCarritoAbierto(true)}
+            className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-2xl py-4 flex items-center justify-between px-5 shadow-xl"
+          >
+            <span className="flex items-center gap-2">
+              <span className="bg-white/20 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                {carrito.reduce((s, i) => s + i.cantidad, 0)}
+              </span>
+              Ver carrito
+            </span>
+            <span className="font-bold">${total.toLocaleString()}</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── MOBILE: drawer carrito ── */}
+      {carritoAbierto && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setCarritoAbierto(false)} />
+          <div className="absolute bottom-0 left-0 right-0 bg-gray-900 rounded-t-2xl border-t border-gray-800 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+              <h2 className="font-bold text-white">Detalle de venta</h2>
+              <button onClick={() => setCarritoAbierto(false)} className="text-gray-400 text-xl">✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {carrito.map((item) => (
+                <div key={item.producto_id} className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{item.nombre}</p>
+                    <p className="text-xs text-gray-400">${item.precio.toLocaleString()} c/u</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button onClick={() => cambiarCantidad(item.producto_id, -1)} className="w-7 h-7 rounded-lg bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700">−</button>
+                    <span className="text-sm font-medium text-white w-5 text-center">{item.cantidad}</span>
+                    <button onClick={() => cambiarCantidad(item.producto_id, 1)} className="w-7 h-7 rounded-lg bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700">+</button>
+                  </div>
+                  <p className="text-sm font-semibold text-white w-16 text-right shrink-0">${(item.precio * item.cantidad).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-gray-800 space-y-3 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Total</span>
+                <span className="text-2xl font-bold text-white">${total.toLocaleString()}</span>
+              </div>
+              {exito ? (
+                <div className="bg-green-950 border border-green-700 text-green-400 rounded-xl p-3 text-sm text-center font-medium">✓ Venta registrada</div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {METODOS.map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => { cobrar(m.value); setCarritoAbierto(false) }}
+                      disabled={cobrando}
+                      className={`${m.color} disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-sm transition flex items-center justify-center gap-1.5`}
+                    >
+                      <span>{m.emoji}</span>{m.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </RouteGuard>
   )

@@ -135,7 +135,7 @@ export default function NuevaComandaPage() {
     <RouteGuard permiso="crearComandas">
       {/* ── VISTA CARRITO (mobile paso 2 / siempre visible en desktop como panel lateral) ── */}
       {vistaCarrito ? (
-        <div className="max-w-lg mx-auto flex flex-col h-[calc(100vh-4rem)]">
+        <div className="max-w-lg mx-auto flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
           <div className="flex items-center gap-3 mb-4 flex-shrink-0">
             <button onClick={() => setVistaCarrito(false)} className="text-gray-400 hover:text-white transition">← Seguir eligiendo</button>
             <div>
@@ -186,7 +186,7 @@ export default function NuevaComandaPage() {
         </div>
       ) : (
         /* ── VISTA PRODUCTOS ── */
-        <div className="flex flex-col h-[calc(100vh-4rem)]">
+        <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
           {/* Header */}
           <div className="flex items-center justify-between mb-3 flex-shrink-0">
             <div className="flex items-center gap-3">
