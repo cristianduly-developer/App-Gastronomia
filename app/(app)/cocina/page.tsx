@@ -131,7 +131,7 @@ export default function CocinaPage() {
 
     const channel = supabaseApp
       .channel('cocina-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items_comanda' }, cargarItems)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items_comanda', filter: `local_id=eq.${localId}` }, cargarItems)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_delivery', filter: `local_id=eq.${localId}` }, cargarItems)
       .subscribe()
 

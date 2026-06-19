@@ -77,7 +77,7 @@ export default function MesaDetallePage() {
 
     const channel = supabaseApp
       .channel(`mesa-${mesaId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items_comanda' }, cargarDatos)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items_comanda', filter: `local_id=eq.${localId}` }, cargarDatos)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comandas' }, cargarDatos)
       .subscribe()
 

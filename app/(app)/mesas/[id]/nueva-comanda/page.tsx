@@ -100,6 +100,7 @@ export default function NuevaComandaPage() {
     await supabaseApp.from('items_comanda').insert(
       cart.map((i) => ({
         comanda_id: comandaId,
+        local_id: localId,
         producto_id: i.productoId,
         nombre: i.nombre,
         precio: i.precio,

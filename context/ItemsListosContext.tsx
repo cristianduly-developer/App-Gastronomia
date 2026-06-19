@@ -48,9 +48,10 @@ export function ItemsListosProvider({ children }: { children: React.ReactNode })
       .channel('items-listos-mozo')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'items_comanda', filter: `estado=eq.listo` },
+        { event: 'UPDATE', schema: 'public', table: 'items_comanda', filter: `local_id=eq.${localId}` },
         async (payload) => {
           const item = payload.new as any
+          if (item.estado !== 'listo') return
           // Cargar mesa para verificar si le corresponde al mozo
           const { data: comanda } = await supabaseApp
             .from('comandas')
