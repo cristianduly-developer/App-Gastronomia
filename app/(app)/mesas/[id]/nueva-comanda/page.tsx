@@ -269,7 +269,7 @@ export default function NuevaComandaPage() {
 
           {/* Botón flotante inferior cuando hay items */}
           {cart.length > 0 && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent pointer-events-none">
+            <div className="fixed bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent pointer-events-none">
               <div className="max-w-lg mx-auto pointer-events-auto">
                 <button
                   onClick={() => setVistaCarrito(true)}
