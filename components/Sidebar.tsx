@@ -56,7 +56,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
         {items.map((item) => {
-          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+          const active = pathname === item.href || pathname.startsWith(item.href)
           const badge =
             item.href === '/pedidos' && pedidosPendientes > 0 ? pedidosPendientes :
             item.href === '/delivery' && deliveryPendientes > 0 ? deliveryPendientes :
