@@ -33,7 +33,7 @@ function tiempoEspera(created_at: string) {
 }
 
 export default function PedidosQRPage() {
-  const { localId } = useSession()
+  const { localId, usaCocina } = useSession()
   const router = useRouter()
   const [pedidos, setPedidos] = useState<PedidoQR[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,7 +104,7 @@ export default function PedidosQRPage() {
       subtotal: i.subtotal,
       observacion: i.observacion,
       tanda,
-      estado: 'pendiente',
+      estado: usaCocina ? 'pendiente' : 'listo',
     }))
     await supabaseApp.from('items_comanda').insert(items)
 
