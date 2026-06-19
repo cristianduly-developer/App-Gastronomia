@@ -6,6 +6,7 @@ import { usePermisos } from '@/hooks/usePermisos'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { DemoBanner } from './DemoBanner'
 import { usePedidosQR } from '@/context/PedidosQRContext'
+import { usePedidosDelivery } from '@/context/PedidosDeliveryContext'
 
 const NAV_ITEMS = [
   { href: '/dashboard',     label: 'Dashboard',    emoji: '📊', permiso: 'verDashboard' },
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { href: '/mesas',         label: 'Mesas',        emoji: '🪑', permiso: 'verMesas' },
   { href: '/pedidos',       label: 'Pedidos QR',   emoji: '📋', permiso: 'verComandas' },
   { href: '/cocina',        label: 'Cocina',       emoji: '👨‍🍳', permiso: 'verCocina' },
+  { href: '/delivery',      label: 'Delivery',     emoji: '🛵',  permiso: 'verDelivery' },
   { href: '/productos',     label: 'Productos',    emoji: '🍔', permiso: 'verProductos' },
   { href: '/clientes',      label: 'Clientes',     emoji: '👥', permiso: 'verClientes' },
   { href: '/caja',          label: 'Caja',         emoji: '🏧', permiso: 'verCaja' },
@@ -26,6 +28,7 @@ export function Sidebar() {
   const { nombreNegocio, rolSistema } = useSession()
   const permisos = usePermisos()
   const { total: pedidosPendientes } = usePedidosQR()
+  const { totalPendientes: deliveryPendientes } = usePedidosDelivery()
 
   const handleLogout = async () => {
     await supabaseApp.auth.signOut()
@@ -54,7 +57,10 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
         {items.map((item) => {
           const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-          const badge = item.href === '/pedidos' && pedidosPendientes > 0 ? pedidosPendientes : null
+          const badge =
+            item.href === '/pedidos' && pedidosPendientes > 0 ? pedidosPendientes :
+            item.href === '/delivery' && deliveryPendientes > 0 ? deliveryPendientes :
+            null
 
           return (
             <Link

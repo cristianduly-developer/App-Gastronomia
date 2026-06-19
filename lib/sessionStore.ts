@@ -15,6 +15,7 @@ interface SessionData {
   estadoSuscripcion: EstadoSuscripcion | null
   diasRestantes: number | null
   onboardingCompleto: boolean
+  mesasAsignadas: string[] | null  // null = todas, array = solo esas
   _hydrated: boolean
 }
 
@@ -34,6 +35,7 @@ const initialState: SessionData = {
   estadoSuscripcion: null,
   diasRestantes: null,
   onboardingCompleto: false,
+  mesasAsignadas: null,
   _hydrated: false,
 }
 
@@ -64,6 +66,7 @@ export const useSession = create<SessionData & SessionActions>()(
         estadoSuscripcion: state.estadoSuscripcion,
         diasRestantes: state.diasRestantes,
         onboardingCompleto: state.onboardingCompleto,
+        mesasAsignadas: state.mesasAsignadas,
       }),
     }
   )

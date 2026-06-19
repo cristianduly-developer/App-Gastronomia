@@ -92,6 +92,67 @@ export default function MesaDetallePage() {
     setProcesando(false)
   }
 
+  const imprimirTicket = () => {
+    if (!comanda || !mesa) return
+    const ahora = new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    const lineas = items.map((i) =>
+      `<tr>
+        <td style="padding:4px 0">${i.cantidad}× ${i.nombre}${i.observacion ? `<br><span style="color:#888;font-size:11px;font-style:italic">${i.observacion}</span>` : ''}</td>
+        <td style="padding:4px 0;text-align:right">$${i.subtotal.toLocaleString()}</td>
+      </tr>`
+    ).join('')
+
+    const metodoLabel: Record<string, string> = { efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Débito', credito: 'Crédito' }
+
+    const ventana = window.open('', '_blank')
+    if (!ventana) return
+    ventana.document.write(`
+      <html><head><title>Ticket</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; font-size: 13px; padding: 16px; max-width: 320px; margin: 0 auto; }
+        h1 { font-size: 18px; text-align: center; margin-bottom: 4px; }
+        .sub { text-align: center; color: #555; font-size: 11px; margin-bottom: 12px; }
+        .sep { border-top: 1px dashed #999; margin: 8px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        .total-row td { font-weight: bold; font-size: 15px; padding-top: 8px; }
+        .metodo { text-align: center; color: #555; font-size: 11px; margin-top: 8px; }
+        .gracias { text-align: center; margin-top: 12px; font-size: 12px; color: #777; }
+        @media print { button { display: none !important; } }
+        .btn { display: block; width: 100%; margin-top: 16px; padding: 10px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+      </style></head>
+      <body>
+        <h1 id="negocio-nombre">—</h1>
+        <p class="sub">${mesa.nombre} · ${ahora}</p>
+        <div class="sep"></div>
+        <table>
+          <tbody>${lineas}</tbody>
+        </table>
+        <div class="sep"></div>
+        <table>
+          <tr class="total-row">
+            <td>TOTAL</td>
+            <td style="text-align:right">$${comanda.total.toLocaleString()}</td>
+          </tr>
+        </table>
+        <p class="metodo">${metodoLabel[metodoPago] ?? metodoPago}</p>
+        <p class="gracias">¡Gracias por su visita!</p>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+        <script>
+          const stored = localStorage.getItem('gastro-session')
+          if (stored) {
+            try {
+              const s = JSON.parse(stored)
+              const nombre = s?.state?.nombreNegocio
+              if (nombre) document.getElementById('negocio-nombre').textContent = nombre
+            } catch(e) {}
+          }
+        </script>
+      </body></html>
+    `)
+    ventana.document.close()
+  }
+
   const cobrarComanda = async () => {
     if (!comanda || !mesa) return
     setProcesando(true)
@@ -295,6 +356,13 @@ export default function MesaDetallePage() {
                 </button>
               ))}
             </div>
+
+            <button
+              onClick={imprimirTicket}
+              className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl py-2.5 text-sm transition mb-3"
+            >
+              🖨️ Ver ticket de cobro
+            </button>
 
             <div className="flex gap-3">
               <button onClick={() => setConfirmCobro(false)} className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition">Cancelar</button>

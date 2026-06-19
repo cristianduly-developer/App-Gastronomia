@@ -34,8 +34,22 @@ const METODOS: { value: MetodoPago; label: string; emoji: string; color: string 
   { value: 'credito', label: 'Crédito', emoji: '💳', color: 'bg-amber-600 hover:bg-amber-500' },
 ]
 
+interface VentaHistorial {
+  id: string
+  total: number
+  metodo_pago: string
+  origen: string | null
+  created_at: string
+  items_venta: { nombre: string; cantidad: number; subtotal: number }[]
+}
+
+const METODO_LABEL: Record<string, string> = {
+  efectivo: 'Efectivo', transferencia: 'Transf.', debito: 'Débito', credito: 'Crédito',
+}
+
 export default function VentasPage() {
   const { localId } = useSession()
+  const [tab, setTab] = useState<'venta' | 'historial'>('venta')
   const [productos, setProductos] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
@@ -43,6 +57,28 @@ export default function VentasPage() {
   const [busqueda, setBusqueda] = useState('')
   const [cobrando, setCobrando] = useState(false)
   const [exito, setExito] = useState(false)
+  const [historial, setHistorial] = useState<VentaHistorial[]>([])
+  const [loadingHistorial, setLoadingHistorial] = useState(false)
+  const [expandidoId, setExpandidoId] = useState<string | null>(null)
+
+  const cargarHistorial = async () => {
+    setLoadingHistorial(true)
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const { data } = await supabaseApp
+      .from('ventas')
+      .select('id, total, metodo_pago, origen, created_at, items_venta(nombre, cantidad, subtotal)')
+      .eq('local_id', localId)
+      .gte('created_at', hoy.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setHistorial(data ?? [])
+    setLoadingHistorial(false)
+  }
+
+  useEffect(() => {
+    if (tab === 'historial' && localId) cargarHistorial()
+  }, [tab, localId])
 
   useEffect(() => {
     if (!localId) return
@@ -124,7 +160,79 @@ export default function VentasPage() {
 
   return (
     <RouteGuard permiso="verVentas">
-      <div className="flex gap-6 h-[calc(100vh-3rem)]">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5">
+        <button
+          onClick={() => setTab('venta')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'venta' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}
+        >
+          💰 Venta rápida
+        </button>
+        <button
+          onClick={() => setTab('historial')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'historial' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}
+        >
+          📋 Historial de hoy
+        </button>
+      </div>
+
+      {/* HISTORIAL */}
+      {tab === 'historial' && (
+        <div className="max-w-2xl">
+          {loadingHistorial ? (
+            <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : historial.length === 0 ? (
+            <div className="text-center py-16 text-gray-600">
+              <p className="text-4xl mb-3">📋</p>
+              <p>No hay ventas registradas hoy</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {historial.map((v) => (
+                <div key={v.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                  <button
+                    onClick={() => setExpandidoId(expandidoId === v.id ? null : v.id)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500">
+                        {new Date(v.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-lg">
+                        {METODO_LABEL[v.metodo_pago] ?? v.metodo_pago}
+                      </span>
+                      {v.origen === 'comanda' && <span className="text-xs text-violet-400">Mesa</span>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-white">${v.total.toLocaleString()}</span>
+                      <span className="text-gray-600 text-xs">{expandidoId === v.id ? '▲' : '▼'}</span>
+                    </div>
+                  </button>
+                  {expandidoId === v.id && v.items_venta.length > 0 && (
+                    <div className="px-5 pb-4 space-y-1 border-t border-gray-800 pt-3">
+                      {v.items_venta.map((it, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                          <span className="text-gray-300">{it.cantidad}× {it.nombre}</span>
+                          <span className="text-gray-400">${it.subtotal.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4 flex justify-between">
+                <span className="text-gray-400 font-medium">Total del día</span>
+                <span className="text-xl font-bold text-white">
+                  ${historial.reduce((s, v) => s + v.total, 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VENTA RÁPIDA */}
+      {tab === 'venta' && <div className="flex gap-6 h-[calc(100vh-8rem)]">
 
         {/* Panel izquierdo — productos */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -281,7 +389,8 @@ export default function VentasPage() {
             )}
           </div>
         </div>
-      </div>
+      </div>}
+
     </RouteGuard>
   )
 }

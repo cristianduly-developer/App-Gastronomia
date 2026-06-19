@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -37,7 +38,7 @@ function tiempoOcupada(created_at: string) {
 }
 
 export default function MesasPage() {
-  const { localId } = useSession()
+  const { localId, mesasAsignadas, rolSistema } = useSession()
   const router = useRouter()
   const [sectores, setSectores] = useState<Sector[]>([])
   const [mesas, setMesas] = useState<Mesa[]>([])
@@ -75,7 +76,12 @@ export default function MesasPage() {
     setLoading(false)
   }
 
-  const mesasFiltradas = mesas.filter((m) => {
+  // Si el mozo tiene mesas asignadas, filtrar solo las suyas
+  const mesasVisibles = (rolSistema === 'mozo' && mesasAsignadas && mesasAsignadas.length > 0)
+    ? mesas.filter((m) => mesasAsignadas.includes(m.id))
+    : mesas
+
+  const mesasFiltradas = mesasVisibles.filter((m) => {
     if (filtro === 'Todas') return true
     if (filtro === 'Ocupadas') return m.estado === 'ocupada'
     if (filtro === 'Libres') return m.estado === 'libre'
@@ -95,6 +101,7 @@ export default function MesasPage() {
 
   return (
     <RouteGuard permiso="verMesas">
+      <PlanGuard feature="usaMesas">
       <div>
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-white">Mesas</h1>
@@ -187,6 +194,7 @@ export default function MesasPage() {
           </div>
         )}
       </div>
+      </PlanGuard>
     </RouteGuard>
   )
 }

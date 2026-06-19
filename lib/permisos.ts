@@ -8,6 +8,7 @@ export interface Permisos {
   verComandas: boolean
   crearComandas: boolean
   verCocina: boolean
+  verDelivery: boolean
   verClientes: boolean
   verCaja: boolean
   verProductos: boolean
@@ -25,6 +26,7 @@ const PERMISOS_POR_ROL: Record<RolSistema, Permisos> = {
     verComandas: true,
     crearComandas: true,
     verCocina: true,
+    verDelivery: true,
     verClientes: true,
     verCaja: true,
     verProductos: true,
@@ -40,6 +42,7 @@ const PERMISOS_POR_ROL: Record<RolSistema, Permisos> = {
     verComandas: false,
     crearComandas: false,
     verCocina: false,
+    verDelivery: true,
     verClientes: true,
     verCaja: true,
     verProductos: false,
@@ -55,6 +58,7 @@ const PERMISOS_POR_ROL: Record<RolSistema, Permisos> = {
     verComandas: true,
     crearComandas: true,
     verCocina: false,
+    verDelivery: true,
     verClientes: false,
     verCaja: false,
     verProductos: false,
@@ -70,6 +74,7 @@ const PERMISOS_POR_ROL: Record<RolSistema, Permisos> = {
     verComandas: false,
     crearComandas: false,
     verCocina: true,
+    verDelivery: false,
     verClientes: false,
     verCaja: false,
     verProductos: false,

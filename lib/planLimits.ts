@@ -1,12 +1,13 @@
 export type Plan = 'basico' | 'profesional' | 'premium' | 'sincargo'
 
 export interface PlanLimits {
-  productos: number | null
+  productos: number | null   // null = ilimitado
   colaboradores: number
   usaMesas: boolean
   usaComandas: boolean
   usaCocina: boolean
   usaQrPedido: boolean
+  usaDelivery: boolean
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -17,6 +18,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaComandas: false,
     usaCocina: false,
     usaQrPedido: false,
+    usaDelivery: true,
   },
   profesional: {
     productos: 150,
@@ -25,14 +27,16 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaComandas: true,
     usaCocina: true,
     usaQrPedido: true,
+    usaDelivery: true,
   },
   premium: {
-    productos: null, // ilimitados
+    productos: null,
     colaboradores: 6,
     usaMesas: true,
     usaComandas: true,
     usaCocina: true,
     usaQrPedido: true,
+    usaDelivery: true,
   },
   sincargo: {
     productos: null,
@@ -41,9 +45,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaComandas: true,
     usaCocina: true,
     usaQrPedido: true,
+    usaDelivery: true,
   },
 }
 
-export function getLimites(plan: Plan): PlanLimits {
-  return PLAN_LIMITS[plan] ?? PLAN_LIMITS.basico
+export function getLimites(plan: Plan | null): PlanLimits {
+  return PLAN_LIMITS[plan ?? 'basico'] ?? PLAN_LIMITS.basico
 }

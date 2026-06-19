@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -131,6 +132,7 @@ export default function PedidosQRPage() {
 
   return (
     <RouteGuard permiso="verComandas">
+      <PlanGuard feature="usaQrPedido">
       <div className="max-w-2xl">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -204,6 +206,7 @@ export default function PedidosQRPage() {
           </div>
         )}
       </div>
+      </PlanGuard>
     </RouteGuard>
   )
 }
