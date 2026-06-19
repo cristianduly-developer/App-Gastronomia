@@ -309,10 +309,18 @@ export default function MesasPage() {
                   <div className="absolute bottom-3 left-3 right-3 bg-gray-950/80 border border-gray-700 rounded-xl p-3">
                     <p className="text-xs text-gray-400 mb-2">Sin posición — arrastrá al plano:</p>
                     <div className="flex flex-wrap gap-2">
-                      {mesasLayoutSector.filter((m) => posiciones[m.id] == null).map((m) => (
+                      {mesasLayoutSector.filter((m) => posiciones[m.id] == null).map((m, idx) => (
                         <button
                           key={m.id}
-                          onClick={() => setPosiciones((prev) => ({ ...prev, [m.id]: { x: 0, y: 0 } }))}
+                          onClick={() => setPosiciones((prev) => {
+                            const ocupadas = new Set(Object.values(prev).map(p => `${p.x},${p.y}`))
+                            let x = idx % COLS, y = Math.floor(idx / COLS)
+                            while (ocupadas.has(`${x},${y}`)) {
+                              x = (x + 1) % COLS
+                              if (x === 0) y = Math.min(y + 1, ROWS - 1)
+                            }
+                            return { ...prev, [m.id]: { x, y } }
+                          })}
                           className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs"
                         >
                           + {m.nombre}
