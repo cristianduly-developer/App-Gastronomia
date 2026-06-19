@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Rutas que no requieren sesión
-const PUBLIC_PREFIXES = ['/menu/', '/delivery/', '/api/public/']
+const PUBLIC_PREFIXES = ['/menu/', '/delivery/', '/api/']
 const PUBLIC_EXACT = new Set(['/', '/login'])
 
 // Rutas que requieren sesión pero NO requieren onboarding completo
