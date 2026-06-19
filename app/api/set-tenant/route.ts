@@ -36,12 +36,9 @@ export async function POST(req: NextRequest) {
   if (!colab) {
     // Opción B: es propietario verificado por el SaaS central
     const acceso = await verificarAcceso(email)
+    console.log('[set-tenant] acceso:', JSON.stringify({ tiene_acceso: acceso?.tiene_acceso, ret_org_id: acceso?.ret_org_id, localId }))
     if (!acceso?.tiene_acceso || acceso.ret_org_id !== localId) {
       return NextResponse.json({ error: 'localId no autorizado para este usuario' }, { status: 403 })
-    }
-    // Validar también que el plan coincide con lo que dice el central
-    if (acceso.plan && acceso.plan !== plan) {
-      return NextResponse.json({ error: 'Plan no coincide con la suscripción activa' }, { status: 403 })
     }
   }
 
