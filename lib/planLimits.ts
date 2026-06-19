@@ -17,7 +17,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaMesas: false,
     usaComandas: false,
     usaCocina: false,
-    usaQrPedido: false,
+    usaQrPedido: true,
     usaDelivery: true,
   },
   profesional: {
