@@ -97,12 +97,21 @@ export default function LoginPage() {
         diasRestantes,
       })
 
-      // Verificar si completó el onboarding
+      // Verificar onboarding y cargar flags de módulos
       const { data: config } = await supabaseApp
         .from('config_local')
-        .select('onboarding_completo')
+        .select('onboarding_completo, usa_mesas, usa_delivery, usa_cocina, usa_qr')
         .eq('local_id', localId)
         .maybeSingle()
+
+      if (config) {
+        setSession({
+          usaMesas:   config.usa_mesas   ?? false,
+          usaDelivery: config.usa_delivery ?? false,
+          usaCocina:  config.usa_cocina  ?? false,
+          usaQr:      config.usa_qr      ?? false,
+        })
+      }
 
       if (!config?.onboarding_completo) {
         router.push('/onboarding')
