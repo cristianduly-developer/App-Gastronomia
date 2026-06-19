@@ -13,10 +13,25 @@ function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
 }
 
+const SECURITY_HEADERS = {
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+}
+
+function applySecurityHeaders(res: NextResponse) {
+  Object.entries(SECURITY_HEADERS).forEach(([k, v]) => res.headers.set(k, v))
+  return res
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (isPublic(pathname)) return NextResponse.next()
+  if (isPublic(pathname)) {
+    return applySecurityHeaders(NextResponse.next())
+  }
 
   const response = NextResponse.next({
     request: { headers: request.headers },
@@ -60,7 +75,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  return response
+  return applySecurityHeaders(response)
 }
 
 export const config = {
