@@ -41,7 +41,7 @@ export function Sidebar() {
   )
 
   return (
-    <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
+    <aside className="hidden md:flex w-64 bg-gray-900 border-r border-gray-800 flex-col h-screen sticky top-0">
       <DemoBanner />
 
       {/* Logo */}
