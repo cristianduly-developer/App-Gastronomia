@@ -15,7 +15,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
-  const { localId, nombreNegocio, usaMesas, usaCocina, usaDelivery, usaQr } = useSession()
+  const { localId, nombreNegocio, nombreUsuario, usaMesas, usaCocina, usaDelivery, usaQr } = useSession()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -96,7 +96,7 @@ export default function DashboardPage() {
     <RouteGuard permiso="verDashboard">
       <div>
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">{saludo} 👋</h1>
+          <h1 className="text-2xl font-bold text-white">{saludo}, {nombreUsuario?.split(' ')[0] || 'bienvenido'} 👋</h1>
           <p className="text-gray-400 text-sm mt-1">{nombreNegocio || 'GastroApp'} — resumen de hoy</p>
         </div>
 

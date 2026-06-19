@@ -9,6 +9,7 @@ interface SessionData {
   localId: string | null
   plan: Plan | null
   nombreNegocio: string | null
+  nombreUsuario: string | null
   rol: 'owner' | 'colaborador' | null
   rolSistema: RolSistema | null
   permisos: Permisos | null
@@ -33,6 +34,7 @@ const initialState: SessionData = {
   localId: null,
   plan: null,
   nombreNegocio: null,
+  nombreUsuario: null,
   rol: null,
   rolSistema: null,
   permisos: null,
@@ -69,6 +71,7 @@ export const useSession = create<SessionData & SessionActions>()(
         localId: state.localId,
         plan: state.plan,
         nombreNegocio: state.nombreNegocio,
+        nombreUsuario: state.nombreUsuario,
         rol: state.rol,
         rolSistema: state.rolSistema,
         estadoSuscripcion: state.estadoSuscripcion,

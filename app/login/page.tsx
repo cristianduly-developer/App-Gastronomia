@@ -89,6 +89,10 @@ export default function LoginPage() {
       // Refrescar el JWT del cliente para que RLS vea el nuevo local_id
       await supabaseApp.auth.refreshSession()
 
+      const nombreUsuario = session.user.user_metadata?.full_name
+        ?? session.user.user_metadata?.name
+        ?? email.split('@')[0]
+
       setSession({
         localId,
         plan,
@@ -98,6 +102,7 @@ export default function LoginPage() {
         nombreNegocio,
         estadoSuscripcion,
         diasRestantes,
+        nombreUsuario,
       })
 
       // Verificar onboarding y cargar flags de módulos

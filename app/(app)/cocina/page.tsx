@@ -71,7 +71,7 @@ function colorTiempo(created_at: string) {
 }
 
 export default function CocinaPage() {
-  const { localId } = useSession()
+  const { localId, nombreUsuario } = useSession()
   const [items, setItems] = useState<ItemCocina[]>([])
   const [loading, setLoading] = useState(true)
   const [tick, setTick] = useState(0)
@@ -197,7 +197,10 @@ export default function CocinaPage() {
       <PlanGuard feature="usaCocina">
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
-          <h1 className="text-2xl font-bold text-white">Monitor de cocina</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Monitor de cocina</h1>
+            {nombreUsuario && <p className="text-xs text-gray-500 mt-0.5">Hola, {nombreUsuario.split(' ')[0]} 👋</p>}
+          </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />

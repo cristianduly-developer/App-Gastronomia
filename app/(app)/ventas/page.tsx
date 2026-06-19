@@ -49,8 +49,9 @@ const METODO_LABEL: Record<string, string> = {
 }
 
 export default function VentasPage() {
-  const { localId } = useSession()
+  const { localId, nombreUsuario } = useSession()
   const [tab, setTab] = useState<'venta' | 'historial'>('venta')
+  const [cajaVerificada, setCajaVerificada] = useState<boolean | null>(null)
   const [productos, setProductos] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
@@ -87,9 +88,11 @@ export default function VentasPage() {
     Promise.all([
       supabaseApp.from('categorias').select('id, nombre').eq('local_id', localId).eq('activo', true).order('orden'),
       supabaseApp.from('productos').select('id, nombre, precio, categoria_id, imagen_url, agotado').eq('local_id', localId).eq('activo', true).order('nombre'),
-    ]).then(([{ data: cats }, { data: prods }]) => {
+      supabaseApp.from('caja').select('id').eq('local_id', localId).eq('estado', 'abierta').maybeSingle(),
+    ]).then(([{ data: cats }, { data: prods }, { data: caja }]) => {
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
+      setCajaVerificada(!!caja)
     })
   }, [localId])
 
@@ -236,7 +239,19 @@ export default function VentasPage() {
       )}
 
       {/* VENTA RÁPIDA */}
-      {tab === 'venta' && <div className="flex gap-6 h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)]">
+      {tab === 'venta' && cajaVerificada === false && (
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] gap-4 text-center">
+          <span className="text-5xl">🏧</span>
+          <h2 className="text-xl font-bold text-white">La caja está cerrada</h2>
+          <p className="text-gray-400 text-sm">
+            {nombreUsuario?.split(' ')[0] ? `${nombreUsuario.split(' ')[0]}, abrí` : 'Abrí'} la caja antes de registrar ventas.
+          </p>
+          <a href="/caja" className="bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl px-6 py-3 transition">
+            Ir a Caja →
+          </a>
+        </div>
+      )}
+      {tab === 'venta' && cajaVerificada && <div className="flex gap-6 h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)]">
 
         {/* Panel izquierdo — productos */}
         <div className="flex-1 flex flex-col min-w-0">
