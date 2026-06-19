@@ -116,11 +116,12 @@ export default function MesasPage() {
   }
 
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragging.current || !editandoLayout) return
+    const d = dragging.current
+    if (!d || !editandoLayout) return
     const canvas = e.currentTarget.getBoundingClientRect()
     const x = Math.max(0, Math.min(COLS - 1, Math.floor((e.clientX - canvas.left) / CELL)))
     const y = Math.max(0, Math.min(ROWS - 1, Math.floor((e.clientY - canvas.top) / CELL)))
-    setPosiciones((prev) => ({ ...prev, [dragging.current!.mesaId]: { x, y } }))
+    setPosiciones((prev) => ({ ...prev, [d.mesaId]: { x, y } }))
   }
 
   const onMouseUp = () => { dragging.current = null }
