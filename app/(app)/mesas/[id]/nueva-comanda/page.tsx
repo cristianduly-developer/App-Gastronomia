@@ -103,6 +103,7 @@ export default function NuevaComandaPage() {
         producto_id: i.productoId,
         nombre: i.nombre,
         precio: i.precio,
+        precio_unitario: i.precio,
         cantidad: i.cantidad,
         subtotal: i.precio * i.cantidad,
         observacion: i.observacion || null,

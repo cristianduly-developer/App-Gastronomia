@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-
-// Rate limiting en memoria: localId+IP → [timestamps]
-const rateLimitMap = new Map<string, number[]>()
-const WINDOW_MS = 60_000  // 1 minuto
-const MAX_PEDIDOS = 5     // máximo 5 pedidos por minuto por IP+local
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now()
-  const hits = (rateLimitMap.get(key) ?? []).filter((t) => now - t < WINDOW_MS)
-  if (hits.length >= MAX_PEDIDOS) return false
-  rateLimitMap.set(key, [...hits, now])
-  return true
-}
+import { deliveryLimiter, checkMemRateLimit } from '@/lib/ratelimit'
 
 export async function POST(req: NextRequest) {
   const ip =
@@ -28,7 +16,10 @@ export async function POST(req: NextRequest) {
   }
 
   const key = `${ip}:${localId}`
-  if (!checkRateLimit(key)) {
+  if (deliveryLimiter) {
+    const { success } = await deliveryLimiter.limit(key)
+    if (!success) return NextResponse.json({ error: 'Demasiados pedidos. Esperá un momento.' }, { status: 429 })
+  } else if (!checkMemRateLimit(key, 5)) {
     return NextResponse.json({ error: 'Demasiados pedidos. Esperá un momento.' }, { status: 429 })
   }
 
