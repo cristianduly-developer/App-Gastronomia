@@ -1,17 +1,12 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Rutas que no requieren sesión
-const PUBLIC_PREFIXES = ['/menu/', '/delivery/', '/api/', '/auth/']
-const PUBLIC_EXACT = new Set(['/', '/login'])
-
-// Rutas que requieren sesión pero NO requieren onboarding completo
-const ONBOARDING_ALLOWED = new Set(['/onboarding', '/login'])
-
-function isPublic(pathname: string): boolean {
-  if (PUBLIC_EXACT.has(pathname)) return true
-  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
-}
+// Solo proteger rutas bajo /(app)/* — el resto maneja su propio auth en cliente
+// Las rutas de Next.js bajo el grupo (app) se mapean sin el paréntesis en la URL
+const APP_ROUTES = [
+  '/dashboard', '/mesas', '/ventas', '/cocina', '/delivery',
+  '/pedidos', '/productos', '/categorias', '/clientes',
+  '/colaboradores', '/configuracion', '/reportes', '/caja', '/sectores',
+]
 
 const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
@@ -29,53 +24,25 @@ function applySecurityHeaders(res: NextResponse) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (isPublic(pathname)) {
-    return applySecurityHeaders(NextResponse.next())
-  }
+  // Aplicar headers de seguridad a todas las respuestas
+  const response = NextResponse.next()
+  applySecurityHeaders(response)
 
-  const response = NextResponse.next({
-    request: { headers: request.headers },
-  })
+  // Solo verificar sesión en rutas protegidas de la app
+  const isAppRoute = APP_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'))
+  if (!isAppRoute) return response
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookies) =>
-          cookies.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          ),
-      },
-    }
-  )
+  // Verificar cookie de sesión de Supabase
+  const sessionCookie = request.cookies.get('sb-access-token')?.value
+    ?? request.cookies.getAll().find(c => c.name.includes('auth-token'))?.value
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!sessionCookie) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Si tiene sesión y va a /login → redirigir al dashboard
-  if (pathname === '/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  // Si no tiene local_id en app_metadata → onboarding incompleto
-  // Esto viene del JWT sin necesidad de query a DB
-  const localId = user.app_metadata?.local_id
-  if (!localId && !ONBOARDING_ALLOWED.has(pathname)) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/onboarding'
-    return NextResponse.redirect(url)
-  }
-
-  return applySecurityHeaders(response)
+  return response
 }
 
 export const config = {
