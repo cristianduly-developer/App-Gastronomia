@@ -22,9 +22,6 @@ export async function verificarAcceso(email: string): Promise<AccesoResult | nul
     app_id_param: 'app-gastronomia',
   })
 
-  console.log('[central] url:', CENTRAL_URL, 'key defined:', !!CENTRAL_KEY)
-  console.log('[central] rpc data:', JSON.stringify(data), 'error:', JSON.stringify(error))
-
   if (error) return null
   if (!data) return null
   const result = Array.isArray(data) ? data[0] : data
