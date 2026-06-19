@@ -158,7 +158,7 @@ export default function DeliveryPage() {
   const guardarPedido = async () => {
     if (!cliente.nombre.trim() || !cliente.tel.trim() || (!retiraEnLocal && !cliente.dir.trim()) || items.length === 0) return
     setGuardando(true)
-    const { data: pedido } = await supabaseApp.from('pedidos_delivery').insert({
+    const { data: pedido, error } = await supabaseApp.from('pedidos_delivery').insert({
       local_id: localId,
       cliente_nombre: cliente.nombre.trim(),
       cliente_tel: cliente.tel.trim(),
@@ -170,19 +170,28 @@ export default function DeliveryPage() {
       origen: 'manual',
     }).select().single()
 
-    if (pedido) {
-      await supabaseApp.from('items_pedido_delivery').insert(
-        items.map((i) => ({
-          pedido_delivery_id: pedido.id,
-          producto_id: i.producto_id,
-          nombre: i.nombre,
-          precio: i.precio,
-          cantidad: i.cantidad,
-          subtotal: i.subtotal,
-          observacion: i.observacion || null,
-        }))
-      )
+    if (error || !pedido) {
+      alert(`Error al guardar el pedido: ${error?.message ?? 'sin respuesta'}`)
+      setGuardando(false)
+      return
     }
+
+    const { error: errorItems } = await supabaseApp.from('items_pedido_delivery').insert(
+      items.map((i) => ({
+        pedido_delivery_id: pedido.id,
+        producto_id: i.producto_id,
+        nombre: i.nombre,
+        precio: i.precio,
+        cantidad: i.cantidad,
+        subtotal: i.subtotal,
+        observacion: i.observacion || null,
+      }))
+    )
+
+    if (errorItems) {
+      alert(`Error al guardar los items: ${errorItems.message}`)
+    }
+
     setGuardando(false)
     setModalNuevo(false)
     cargar()
