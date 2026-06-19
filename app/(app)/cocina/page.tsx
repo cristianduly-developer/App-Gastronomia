@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -13,7 +14,7 @@ function useWakeLock() {
     try {
       lockRef.current = await (navigator as any).wakeLock.request('screen')
       setActivo(true)
-      lockRef.current.addEventListener('release', () => setActivo(false))
+      lockRef.current?.addEventListener('release', () => setActivo(false))
     } catch { /* navegador no lo permite */ }
   }, [])
 
@@ -43,6 +44,8 @@ interface ItemCocina {
   created_at: string
   comanda_id: string
   mesa_nombre: string
+  origen: 'mesa' | 'delivery'
+  pedido_delivery_id?: string
 }
 
 const COLUMNAS = [
@@ -76,18 +79,22 @@ export default function CocinaPage() {
   const { activo: wakeLockActivo, activar: activarWakeLock, desactivar: desactivarWakeLock } = useWakeLock()
 
   const cargarItems = useCallback(async () => {
-    // Traer items pendiente/en_preparacion/listo con info de mesa via comanda
-    const { data } = await supabaseApp
-      .from('items_comanda')
-      .select(`
-        id, nombre, cantidad, observacion, estado, tanda, created_at, comanda_id,
-        comandas!inner ( mesa_id, mesas!inner ( nombre ) )
-      `)
-      .eq('comandas.local_id', localId)
-      .in('estado', ['pendiente', 'en_preparacion', 'listo'])
-      .order('created_at')
+    const [{ data: itemsMesa }, { data: itemsDelivery }] = await Promise.all([
+      supabaseApp
+        .from('items_comanda')
+        .select(`id, nombre, cantidad, observacion, estado, tanda, created_at, comanda_id, comandas!inner ( mesa_id, mesas!inner ( nombre ) )`)
+        .eq('comandas.local_id', localId)
+        .in('estado', ['pendiente', 'en_preparacion', 'listo'])
+        .order('created_at'),
+      supabaseApp
+        .from('items_pedido_delivery')
+        .select(`id, nombre, cantidad, observacion, created_at, pedido_delivery_id, pedidos_delivery!inner ( local_id, cliente_nombre, estado )`)
+        .eq('pedidos_delivery.local_id', localId)
+        .eq('pedidos_delivery.estado', 'en_cocina')
+        .order('created_at'),
+    ])
 
-    const mapped: ItemCocina[] = (data ?? []).map((i: any) => ({
+    const deMesa: ItemCocina[] = (itemsMesa ?? []).map((i: any) => ({
       id: i.id,
       nombre: i.nombre,
       cantidad: i.cantidad,
@@ -97,9 +104,24 @@ export default function CocinaPage() {
       created_at: i.created_at,
       comanda_id: i.comanda_id,
       mesa_nombre: i.comandas?.mesas?.nombre ?? '?',
+      origen: 'mesa' as const,
     }))
 
-    setItems(mapped)
+    const deDelivery: ItemCocina[] = (itemsDelivery ?? []).map((i: any) => ({
+      id: i.id,
+      nombre: i.nombre,
+      cantidad: i.cantidad,
+      observacion: i.observacion,
+      estado: 'pendiente' as const,
+      tanda: 1,
+      created_at: i.created_at,
+      comanda_id: '',
+      mesa_nombre: i.pedidos_delivery?.cliente_nombre ?? 'Delivery',
+      origen: 'delivery' as const,
+      pedido_delivery_id: i.pedido_delivery_id,
+    }))
+
+    setItems([...deMesa, ...deDelivery].sort((a, b) => a.created_at.localeCompare(b.created_at)))
     setLoading(false)
   }, [localId])
 
@@ -110,6 +132,7 @@ export default function CocinaPage() {
     const channel = supabaseApp
       .channel('cocina-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'items_comanda' }, cargarItems)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_delivery' }, cargarItems)
       .subscribe()
 
     // Tick cada minuto para actualizar los tiempos
@@ -132,18 +155,29 @@ export default function CocinaPage() {
 
     setCambiando((s) => new Set(s).add(item.id))
 
-    await supabaseApp
-      .from('items_comanda')
-      .update({ estado: nuevoEstado })
-      .eq('id', item.id)
-
-    // Si pasa a entregado, sacar de la vista
-    if (nuevoEstado === 'entregado') {
-      setItems((prev) => prev.filter((i) => i.id !== item.id))
+    if (item.origen === 'delivery') {
+      // Items de delivery: cuando llegan a "listo" desaparecen de cocina
+      // (el estado del pedido lo maneja el panel de delivery)
+      if (nuevoEstado === 'entregado' || nuevoEstado === 'listo') {
+        setItems((prev) => prev.filter((i) => i.id !== item.id))
+      } else {
+        setItems((prev) =>
+          prev.map((i) => i.id === item.id ? { ...i, estado: nuevoEstado as ItemCocina['estado'] } : i)
+        )
+      }
     } else {
-      setItems((prev) =>
-        prev.map((i) => i.id === item.id ? { ...i, estado: nuevoEstado as ItemCocina['estado'] } : i)
-      )
+      await supabaseApp
+        .from('items_comanda')
+        .update({ estado: nuevoEstado })
+        .eq('id', item.id)
+
+      if (nuevoEstado === 'entregado') {
+        setItems((prev) => prev.filter((i) => i.id !== item.id))
+      } else {
+        setItems((prev) =>
+          prev.map((i) => i.id === item.id ? { ...i, estado: nuevoEstado as ItemCocina['estado'] } : i)
+        )
+      }
     }
 
     setCambiando((s) => { const ns = new Set(s); ns.delete(item.id); return ns })
@@ -160,6 +194,7 @@ export default function CocinaPage() {
 
   return (
     <RouteGuard permiso="verCocina">
+      <PlanGuard feature="usaCocina">
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <h1 className="text-2xl font-bold text-white">Monitor de cocina</h1>
@@ -222,10 +257,15 @@ export default function CocinaPage() {
                           key={item.id}
                           className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-2"
                         >
-                          {/* Mesa + tanda */}
+                          {/* Origen + tanda */}
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-violet-400">{item.mesa_nombre}</span>
-                            <span className="text-xs text-gray-600">T{item.tanda}</span>
+                            <div className="flex items-center gap-1.5">
+                              {item.origen === 'delivery' && <span className="text-xs">🛵</span>}
+                              <span className={`text-xs font-bold ${item.origen === 'delivery' ? 'text-orange-400' : 'text-violet-400'}`}>
+                                {item.mesa_nombre}
+                              </span>
+                            </div>
+                            {item.origen === 'mesa' && <span className="text-xs text-gray-600">T{item.tanda}</span>}
                           </div>
 
                           {/* Producto */}
@@ -268,6 +308,7 @@ export default function CocinaPage() {
           </div>
         )}
       </div>
+      </PlanGuard>
     </RouteGuard>
   )
 }
