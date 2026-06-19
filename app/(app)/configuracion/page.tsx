@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
@@ -27,6 +28,7 @@ const TIPO_LABELS: Record<string, string> = {
 
 export default function ConfiguracionPage() {
   const { localId, setSession } = useSession()
+  const router = useRouter()
   const [config, setConfig] = useState<Config | null>(null)
   const [form, setForm] = useState<Config | null>(null)
   const [guardando, setGuardando] = useState(false)
@@ -89,8 +91,7 @@ export default function ConfiguracionPage() {
       usaQr: form.usa_qr,
     })
     setGuardando(false)
-    setGuardado(true)
-    setTimeout(() => setGuardado(false), 2000)
+    router.push('/dashboard')
   }
 
   const copiarLink = () => {
