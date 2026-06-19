@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { Sidebar } from '@/components/Sidebar'
 import { BottomNav } from '@/components/BottomNav'
 import { PedidoQRPopup } from '@/components/PedidoQRPopup'
@@ -7,10 +8,33 @@ import { ItemListoPopup } from '@/components/ItemListoPopup'
 import { PedidosQRProvider, usePedidosQR } from '@/context/PedidosQRContext'
 import { PedidosDeliveryProvider, usePedidosDelivery } from '@/context/PedidosDeliveryContext'
 import { ItemsListosProvider } from '@/context/ItemsListosContext'
+import { supabaseApp } from '@/lib/supabaseApp'
+import { useSession } from '@/lib/sessionStore'
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const { nuevoPedido: nuevoQR, cerrarNuevo: cerrarQR } = usePedidosQR()
   const { nuevoPedido: nuevoDelivery, cerrarNuevo: cerrarDelivery } = usePedidosDelivery()
+  const { localId, setSession } = useSession()
+
+  useEffect(() => {
+    if (!localId) return
+    supabaseApp
+      .from('config_local')
+      .select('nombre_negocio, usa_mesas, usa_delivery, usa_cocina, usa_qr')
+      .eq('local_id', localId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return
+        setSession({
+          nombreNegocio: data.nombre_negocio ?? undefined,
+          usaMesas:    data.usa_mesas    ?? false,
+          usaDelivery: data.usa_delivery ?? false,
+          usaCocina:   data.usa_cocina   ?? false,
+          usaQr:       data.usa_qr       ?? false,
+        })
+      })
+  }, [localId])
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
