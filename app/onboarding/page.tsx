@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { getLimites } from '@/lib/planLimits'
 
 type TipoNegocio = 'food_truck' | 'rotiseria' | 'pizzeria' | 'restaurante' | 'cafeteria' | 'otro'
 
@@ -16,7 +17,8 @@ const TIPOS: { value: TipoNegocio; label: string; emoji: string }[] = [
 ]
 
 export default function OnboardingPage() {
-  const { localId, setSession } = useSession()
+  const { localId, plan, setSession } = useSession()
+  const limites = getLimites(plan)
   const router = useRouter()
   const [paso, setPaso] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -143,30 +145,47 @@ export default function OnboardingPage() {
 
               <div className="space-y-3">
                 {[
-                  { key: 'usaMesas', emoji: '🪑', label: 'Tenés mesas / comedor', desc: 'Gestión visual de salón y comandas' },
-                  { key: 'usaDelivery', emoji: '🛵', label: 'Hacés delivery', desc: 'Pedidos para envío a domicilio' },
-                  { key: 'usaCocina', emoji: '👨‍🍳', label: 'Querés monitor de cocina', desc: 'Pantalla en cocina con pedidos en tiempo real' },
-                  { key: 'usaQr', emoji: '📱', label: 'Querés menú QR', desc: 'Los clientes ven la carta desde su celu' },
-                ].map(({ key, emoji, label, desc }) => (
-                  <button
-                    key={key}
-                    onClick={() => handleToggle(key as keyof typeof form)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
-                      ${!!form[key as keyof typeof form]
-                        ? 'bg-violet-950 border-violet-600'
-                        : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
-                  >
-                    <span className="text-2xl">{emoji}</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-white">{label}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-                      ${!!form[key as keyof typeof form] ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
-                      {!!form[key as keyof typeof form] && <span className="text-white text-xs">✓</span>}
-                    </div>
-                  </button>
-                ))}
+                  { key: 'usaMesas',    planKey: 'usaMesas',    emoji: '🪑', label: 'Tenés mesas / comedor',      desc: 'Gestión visual de salón y comandas' },
+                  { key: 'usaDelivery', planKey: 'usaDelivery', emoji: '🛵', label: 'Hacés delivery',              desc: 'Pedidos para envío a domicilio' },
+                  { key: 'usaCocina',   planKey: 'usaCocina',   emoji: '👨‍🍳', label: 'Querés monitor de cocina',   desc: 'Pantalla en cocina con pedidos en tiempo real' },
+                  { key: 'usaQr',       planKey: 'usaQrPedido', emoji: '📱', label: 'Querés menú QR',              desc: 'Los clientes ven la carta desde su celu' },
+                ].map(({ key, planKey, emoji, label, desc }) => {
+                  const disponible = limites[planKey as keyof typeof limites] as boolean
+                  const activo = !!form[key as keyof typeof form]
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => disponible && handleToggle(key as keyof typeof form)}
+                      disabled={!disponible}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
+                        ${!disponible
+                          ? 'bg-gray-900 border-gray-800 opacity-60 cursor-not-allowed'
+                          : activo
+                            ? 'bg-violet-950 border-violet-600'
+                            : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
+                    >
+                      <span className="text-2xl">{emoji}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-white">{label}</p>
+                          {!disponible && (
+                            <span className="text-xs bg-amber-900 text-amber-300 px-2 py-0.5 rounded-lg font-medium">
+                              Plan Profesional
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+                      </div>
+                      {disponible && (
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                          ${activo ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
+                          {activo && <span className="text-white text-xs">✓</span>}
+                        </div>
+                      )}
+                      {!disponible && <span className="text-gray-600 text-lg">🔒</span>}
+                    </button>
+                  )
+                })}
               </div>
 
               <div className="flex gap-3">
