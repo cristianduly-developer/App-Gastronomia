@@ -30,5 +30,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error actualizando sesión' }, { status: 500 })
   }
 
+  console.log(JSON.stringify({
+    event: 'tenant_set',
+    userId,
+    localId,
+    plan,
+    isOwner,
+    ts: new Date().toISOString(),
+  }))
+
   return NextResponse.json({ ok: true })
 }

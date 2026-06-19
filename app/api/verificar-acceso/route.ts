@@ -27,6 +27,14 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
 
   if (colab) {
+    console.log(JSON.stringify({
+      event: 'login_ok',
+      email,
+      localId: colab.local_id,
+      rol: colab.rol,
+      esColab: true,
+      ts: new Date().toISOString(),
+    }))
     return NextResponse.json({
       esColab: true,
       localId: colab.local_id,
@@ -64,6 +72,15 @@ export async function GET(req: NextRequest) {
     })
     console.log('empleado auto-registrado en central:', email)
   }
+
+  console.log(JSON.stringify({
+    event: 'login_ok',
+    email,
+    localId: acceso.ret_org_id,
+    plan: acceso.plan,
+    esColab: false,
+    ts: new Date().toISOString(),
+  }))
 
   return NextResponse.json({ esColab: false, acceso })
 }

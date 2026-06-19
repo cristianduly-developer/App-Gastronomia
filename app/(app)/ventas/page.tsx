@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
@@ -145,6 +146,9 @@ export default function VentasPage() {
         }))
       )
     }
+
+    Sentry.metrics.increment('ventas.cerradas', 1, { tags: { metodo } })
+    Sentry.metrics.distribution('ventas.monto', total)
 
     setCarrito([])
     setCobrando(false)

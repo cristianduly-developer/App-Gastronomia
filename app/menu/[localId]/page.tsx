@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
+export const revalidate = 60
+
 interface Params { params: Promise<{ localId: string }> }
 
 interface Categoria { id: string; nombre: string }
