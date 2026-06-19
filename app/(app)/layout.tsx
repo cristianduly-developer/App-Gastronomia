@@ -2,8 +2,10 @@
 import { Sidebar } from '@/components/Sidebar'
 import { PedidoQRPopup } from '@/components/PedidoQRPopup'
 import { PedidoDeliveryPopup } from '@/components/PedidoDeliveryPopup'
+import { ItemListoPopup } from '@/components/ItemListoPopup'
 import { PedidosQRProvider, usePedidosQR } from '@/context/PedidosQRContext'
 import { PedidosDeliveryProvider, usePedidosDelivery } from '@/context/PedidosDeliveryContext'
+import { ItemsListosProvider } from '@/context/ItemsListosContext'
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const { nuevoPedido: nuevoQR, cerrarNuevo: cerrarQR } = usePedidosQR()
@@ -16,6 +18,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
       </main>
       {nuevoQR && <PedidoQRPopup pedido={nuevoQR} onCerrar={cerrarQR} />}
       {nuevoDelivery && <PedidoDeliveryPopup pedido={nuevoDelivery} onCerrar={cerrarDelivery} />}
+      <ItemListoPopup />
     </div>
   )
 }
@@ -24,7 +27,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <PedidosQRProvider>
       <PedidosDeliveryProvider>
-        <AppLayoutInner>{children}</AppLayoutInner>
+        <ItemsListosProvider>
+          <AppLayoutInner>{children}</AppLayoutInner>
+        </ItemsListosProvider>
       </PedidosDeliveryProvider>
     </PedidosQRProvider>
   )
