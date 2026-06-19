@@ -70,7 +70,7 @@ export default function DashboardPage() {
         .from('caja')
         .select('id')
         .eq('local_id', localId)
-        .is('cerrada_at', null)
+        .eq('estado', 'abierta')
         .maybeSingle(),
     ])
 
