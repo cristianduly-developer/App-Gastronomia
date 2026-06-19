@@ -9,24 +9,25 @@ import { usePedidosQR } from '@/context/PedidosQRContext'
 import { usePedidosDelivery } from '@/context/PedidosDeliveryContext'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',    emoji: '📊', permiso: 'verDashboard' },
-  { href: '/ventas',        label: 'Ventas',       emoji: '💰', permiso: 'verVentas' },
-  { href: '/mesas',         label: 'Mesas',        emoji: '🪑', permiso: 'verMesas' },
-  { href: '/pedidos',       label: 'Pedidos QR',   emoji: '📋', permiso: 'verComandas' },
-  { href: '/cocina',        label: 'Cocina',       emoji: '👨‍🍳', permiso: 'verCocina' },
-  { href: '/delivery',      label: 'Delivery',     emoji: '🛵',  permiso: 'verDelivery' },
-  { href: '/productos',     label: 'Productos',    emoji: '🍔', permiso: 'verProductos' },
-  { href: '/clientes',      label: 'Clientes',     emoji: '👥', permiso: 'verClientes' },
-  { href: '/caja',          label: 'Caja',         emoji: '🏧', permiso: 'verCaja' },
-  { href: '/reportes',       label: 'Reportes',      emoji: '📈', permiso: 'verReportes' },
-  { href: '/colaboradores',  label: 'Colaboradores', emoji: '👥', permiso: 'verColaboradores' },
-  { href: '/configuracion',  label: 'Configuración', emoji: '⚙️', permiso: 'verConfig' },
+  { href: '/dashboard',     label: 'Dashboard',    emoji: '📊', permiso: 'verDashboard',    config: null },
+  { href: '/ventas',        label: 'Ventas',       emoji: '💰', permiso: 'verVentas',        config: null },
+  { href: '/mesas',         label: 'Mesas',        emoji: '🪑', permiso: 'verMesas',         config: 'usaMesas' },
+  { href: '/pedidos',       label: 'Pedidos QR',   emoji: '📋', permiso: 'verComandas',      config: 'usaQr' },
+  { href: '/cocina',        label: 'Cocina',       emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
+  { href: '/delivery',      label: 'Delivery',     emoji: '🛵',  permiso: 'verDelivery',     config: 'usaDelivery' },
+  { href: '/productos',     label: 'Productos',    emoji: '🍔', permiso: 'verProductos',     config: null },
+  { href: '/clientes',      label: 'Clientes',     emoji: '👥', permiso: 'verClientes',      config: null },
+  { href: '/caja',          label: 'Caja',         emoji: '🏧', permiso: 'verCaja',          config: null },
+  { href: '/reportes',      label: 'Reportes',     emoji: '📈', permiso: 'verReportes',      config: null },
+  { href: '/colaboradores', label: 'Colaboradores',emoji: '👥', permiso: 'verColaboradores', config: null },
+  { href: '/configuracion', label: 'Configuración',emoji: '⚙️', permiso: 'verConfig',        config: null },
 ] as const
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { nombreNegocio, rolSistema } = useSession()
+  const { nombreNegocio, rolSistema, usaMesas, usaDelivery, usaCocina, usaQr } = useSession()
   const permisos = usePermisos()
+  const configFlags: Record<string, boolean> = { usaMesas, usaDelivery, usaCocina, usaQr }
   const { total: pedidosPendientes } = usePedidosQR()
   const { totalPendientes: deliveryPendientes } = usePedidosDelivery()
 
@@ -34,7 +35,10 @@ export function Sidebar() {
     await supabaseApp.auth.signOut()
   }
 
-  const items = NAV_ITEMS.filter((item) => permisos[item.permiso as keyof typeof permisos])
+  const items = NAV_ITEMS.filter((item) =>
+    permisos[item.permiso as keyof typeof permisos] &&
+    (item.config === null || configFlags[item.config])
+  )
 
   return (
     <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">

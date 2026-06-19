@@ -38,13 +38,39 @@ export function useSessionGuard() {
         mesasAsignadas = colab?.mesas_asignadas ?? null
       }
 
+      // Cargar flags de config del local
+      let usaMesas = false, usaDelivery = false, usaCocina = false, usaQr = false
+      let nombreNegocio: string | null = null
+      let onboardingCompleto = false
+      if (localId) {
+        const { data: cfg } = await supabaseApp
+          .from('config_local')
+          .select('nombre_negocio, onboarding_completo, usa_mesas, usa_delivery, usa_cocina, usa_qr')
+          .eq('local_id', localId)
+          .maybeSingle()
+        if (cfg) {
+          nombreNegocio = cfg.nombre_negocio ?? null
+          onboardingCompleto = cfg.onboarding_completo ?? false
+          usaMesas = cfg.usa_mesas ?? false
+          usaDelivery = cfg.usa_delivery ?? false
+          usaCocina = cfg.usa_cocina ?? false
+          usaQr = cfg.usa_qr ?? false
+        }
+      }
+
       setSession({
         localId,
         plan,
+        nombreNegocio,
+        onboardingCompleto,
         rol: isOwner ? 'owner' : 'colaborador',
         rolSistema,
         permisos: getPermisos(rolSistema),
         mesasAsignadas,
+        usaMesas,
+        usaDelivery,
+        usaCocina,
+        usaQr,
         _hydrated: true,
       })
       setHydrated()
