@@ -24,7 +24,9 @@ export default function DashboardPage() {
     cargarStats()
 
     const onFocus = () => cargarStats()
+    const onVisible = () => { if (document.visibilityState === 'visible') cargarStats() }
     window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
 
     const channel = supabaseApp
       .channel('dashboard-caja')
@@ -34,6 +36,7 @@ export default function DashboardPage() {
 
     return () => {
       window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
       supabaseApp.removeChannel(channel)
     }
   }, [localId])

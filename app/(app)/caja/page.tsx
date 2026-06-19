@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
@@ -26,6 +27,7 @@ interface VentaResumen {
 
 export default function CajaPage() {
   const { localId } = useSession()
+  const router = useRouter()
   const [cajaActual, setCajaActual] = useState<Caja | null>(null)
   const [gastos, setGastos] = useState<GastoCaja[]>([])
   const [ventas, setVentas] = useState<VentaResumen[]>([])
@@ -93,6 +95,7 @@ export default function CajaPage() {
       }
       setMontoApertura('')
       cargarDatos()
+      router.refresh()
     } finally {
       setGuardando(false)
     }
@@ -110,6 +113,7 @@ export default function CajaPage() {
         notas_cierre: notasCierre || null,
       }).eq('id', cajaActual.id).eq('estado', 'abierta')
       if (error) { alert('Error al cerrar la caja'); return }
+      router.refresh()
       setMontoCierre('')
       setNotasCierre('')
       cargarDatos()
