@@ -470,7 +470,7 @@ export default function DeliveryPage() {
               </button>
               <button
                 onClick={guardarPedido}
-                disabled={!cliente.nombre.trim() || !cliente.tel.trim() || !cliente.dir.trim() || items.length === 0 || guardando}
+                disabled={!cliente.nombre.trim() || !cliente.tel.trim() || (!retiraEnLocal && !cliente.dir.trim()) || items.length === 0 || guardando}
                 className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-semibold rounded-xl py-3 text-sm transition"
               >
                 {guardando ? 'Guardando...' : `Crear pedido · $${totalPedido.toLocaleString()}`}
