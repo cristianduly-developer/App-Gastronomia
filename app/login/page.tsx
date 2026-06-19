@@ -86,6 +86,9 @@ export default function LoginPage() {
         body: JSON.stringify({ localId, plan, userId: session.user.id, isOwner }),
       })
 
+      // Refrescar el JWT del cliente para que RLS vea el nuevo local_id
+      await supabaseApp.auth.refreshSession()
+
       setSession({
         localId,
         plan,
