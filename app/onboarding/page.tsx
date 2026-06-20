@@ -60,6 +60,17 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+
+        {/* Banner de bienvenida */}
+        <div className="rounded-2xl text-center p-6 mb-6" style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', boxShadow: '0 4px 16px rgba(79,70,229,0.35)' }}>
+          <div className="text-4xl mb-2">🎉</div>
+          <div className="text-white font-extrabold text-xl mb-1">¡Bienvenido/a!</div>
+          <div className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            Tu prueba gratuita de <strong>28 días</strong> del plan Profesional ya está activa.<br/>
+            Configurá tu negocio en 3 pasos y empezá a gestionar tu gastronomía.
+          </div>
+        </div>
+
         {/* Progreso */}
         <div className="flex items-center gap-2 mb-8">
           {[1, 2, 3].map((n) => (
