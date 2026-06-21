@@ -5,9 +5,7 @@ import { BottomNav } from '@/components/BottomNav'
 import { PedidoQRPopup } from '@/components/PedidoQRPopup'
 import { PedidoDeliveryPopup } from '@/components/PedidoDeliveryPopup'
 import { ItemListoPopup } from '@/components/ItemListoPopup'
-import { PedidosQRProvider, usePedidosQR } from '@/context/PedidosQRContext'
-import { PedidosDeliveryProvider, usePedidosDelivery } from '@/context/PedidosDeliveryContext'
-import { ItemsListosProvider } from '@/context/ItemsListosContext'
+import { AppRealtimeProvider, usePedidosQR, usePedidosDelivery } from '@/context/AppRealtimeContext'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -51,12 +49,8 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PedidosQRProvider>
-      <PedidosDeliveryProvider>
-        <ItemsListosProvider>
-          <AppLayoutInner>{children}</AppLayoutInner>
-        </ItemsListosProvider>
-      </PedidosDeliveryProvider>
-    </PedidosQRProvider>
+    <AppRealtimeProvider>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </AppRealtimeProvider>
   )
 }

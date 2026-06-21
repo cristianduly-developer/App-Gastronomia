@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
-import { useItemsListos } from '@/context/ItemsListosContext'
+import { useItemsListos } from '@/context/AppRealtimeContext'
 
 export function ItemListoPopup() {
   const { nuevoListo, cerrar } = useItemsListos()
@@ -26,16 +26,16 @@ export function ItemListoPopup() {
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔔</span>
+            <span className="text-2xl">ðŸ””</span>
             <div>
-              <p className="text-sm font-bold text-green-200">¡Listo para servir!</p>
+              <p className="text-sm font-bold text-green-200">Â¡Listo para servir!</p>
               <p className="text-base font-semibold text-white mt-0.5">
-                {nuevoListo.cantidad}× {nuevoListo.nombre}
+                {nuevoListo.cantidad}Ã— {nuevoListo.nombre}
               </p>
               <p className="text-sm text-green-300 mt-0.5">Mesa {nuevoListo.mesa_nombre}</p>
             </div>
           </div>
-          <button onClick={cerrar} className="text-green-400 hover:text-white transition text-lg leading-none mt-0.5">✕</button>
+          <button onClick={cerrar} className="text-green-400 hover:text-white transition text-lg leading-none mt-0.5">âœ•</button>
         </div>
       </div>
       <div className="h-1 bg-green-950">
@@ -44,3 +44,4 @@ export function ItemListoPopup() {
     </div>
   )
 }
+

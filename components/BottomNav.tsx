@@ -1,26 +1,26 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from '@/lib/sessionStore'
 import { usePermisos } from '@/hooks/usePermisos'
 import { supabaseApp } from '@/lib/supabaseApp'
-import { usePedidosQR } from '@/context/PedidosQRContext'
-import { usePedidosDelivery } from '@/context/PedidosDeliveryContext'
+import { usePedidosQR } from '@/context/AppRealtimeContext'
+import { usePedidosDelivery } from '@/context/AppRealtimeContext'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',    emoji: '📊', permiso: 'verDashboard',    config: null },
-  { href: '/ventas',        label: 'Ventas',       emoji: '💰', permiso: 'verVentas',        config: null },
-  { href: '/mesas',         label: 'Mesas',        emoji: '🪑', permiso: 'verMesas',         config: 'usaMesas' },
-  { href: '/pedidos',       label: 'Pedidos QR',   emoji: '📋', permiso: 'verComandas',      config: 'usaQr' },
-  { href: '/cocina',        label: 'Cocina',       emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
-  { href: '/delivery',      label: 'Delivery',     emoji: '🛵', permiso: 'verDelivery',      config: 'usaDelivery' },
-  { href: '/productos',     label: 'Productos',    emoji: '🍔', permiso: 'verProductos',     config: null },
-  { href: '/clientes',      label: 'Clientes',     emoji: '👥', permiso: 'verClientes',      config: null },
-  { href: '/caja',          label: 'Caja',         emoji: '🏧', permiso: 'verCaja',          config: null },
-  { href: '/reportes',      label: 'Reportes',     emoji: '📈', permiso: 'verReportes',      config: null },
-  { href: '/colaboradores', label: 'Colaboradores',emoji: '👥', permiso: 'verColaboradores', config: null },
-  { href: '/configuracion', label: 'Config',       emoji: '⚙️', permiso: 'verConfig',        config: null },
+  { href: '/dashboard',     label: 'Dashboard',    emoji: 'ðŸ“Š', permiso: 'verDashboard',    config: null },
+  { href: '/ventas',        label: 'Ventas',       emoji: 'ðŸ’°', permiso: 'verVentas',        config: null },
+  { href: '/mesas',         label: 'Mesas',        emoji: 'ðŸª‘', permiso: 'verMesas',         config: 'usaMesas' },
+  { href: '/pedidos',       label: 'Pedidos QR',   emoji: 'ðŸ“‹', permiso: 'verComandas',      config: 'usaQr' },
+  { href: '/cocina',        label: 'Cocina',       emoji: 'ðŸ‘¨â€ðŸ³', permiso: 'verCocina',        config: 'usaCocina' },
+  { href: '/delivery',      label: 'Delivery',     emoji: 'ðŸ›µ', permiso: 'verDelivery',      config: 'usaDelivery' },
+  { href: '/productos',     label: 'Productos',    emoji: 'ðŸ”', permiso: 'verProductos',     config: null },
+  { href: '/clientes',      label: 'Clientes',     emoji: 'ðŸ‘¥', permiso: 'verClientes',      config: null },
+  { href: '/caja',          label: 'Caja',         emoji: 'ðŸ§', permiso: 'verCaja',          config: null },
+  { href: '/reportes',      label: 'Reportes',     emoji: 'ðŸ“ˆ', permiso: 'verReportes',      config: null },
+  { href: '/colaboradores', label: 'Colaboradores',emoji: 'ðŸ‘¥', permiso: 'verColaboradores', config: null },
+  { href: '/configuracion', label: 'Config',       emoji: 'âš™ï¸', permiso: 'verConfig',        config: null },
 ] as const
 
 export function BottomNav() {
@@ -79,14 +79,14 @@ export function BottomNav() {
               onClick={() => setDrawerOpen(true)}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500"
             >
-              <span className="text-xl leading-none">☰</span>
-              <span className="text-[10px] font-medium leading-none">Más</span>
+              <span className="text-xl leading-none">â˜°</span>
+              <span className="text-[10px] font-medium leading-none">MÃ¡s</span>
             </button>
           )}
         </div>
       </nav>
 
-      {/* Drawer "Más" */}
+      {/* Drawer "MÃ¡s" */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Overlay */}
@@ -95,8 +95,8 @@ export function BottomNav() {
           {/* Panel */}
           <div className="absolute bottom-0 left-0 right-0 bg-gray-900 rounded-t-2xl border-t border-gray-800 pb-safe">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-              <span className="text-sm font-semibold text-white">Menú</span>
-              <button onClick={() => setDrawerOpen(false)} className="text-gray-400 text-xl leading-none">✕</button>
+              <span className="text-sm font-semibold text-white">MenÃº</span>
+              <button onClick={() => setDrawerOpen(false)} className="text-gray-400 text-xl leading-none">âœ•</button>
             </div>
 
             <div className="p-3 space-y-0.5">
@@ -128,8 +128,8 @@ export function BottomNav() {
                 onClick={() => supabaseApp.auth.signOut()}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 transition"
               >
-                <span className="text-lg">🚪</span>
-                Cerrar sesión
+                <span className="text-lg">ðŸšª</span>
+                Cerrar sesiÃ³n
               </button>
             </div>
           </div>
@@ -138,3 +138,4 @@ export function BottomNav() {
     </>
   )
 }
+

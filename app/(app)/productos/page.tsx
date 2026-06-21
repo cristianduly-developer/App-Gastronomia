@@ -85,9 +85,11 @@ export default function ProductosPage() {
       agotado: false,
     }
     if (editProd) {
-      await supabaseApp.from('productos').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editProd.id)
+      const { error } = await supabaseApp.from('productos').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editProd.id)
+      if (error) { alert('Error al guardar: ' + error.message); return }
     } else {
-      await supabaseApp.from('productos').insert(payload)
+      const { error } = await supabaseApp.from('productos').insert(payload)
+      if (error) { alert(error.message.includes('límite') ? error.message : 'Error al agregar el producto'); return }
     }
     setModalProd(false)
     cargarDatos()

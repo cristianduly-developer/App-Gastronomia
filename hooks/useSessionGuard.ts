@@ -78,16 +78,22 @@ export function useSessionGuard() {
 
     syncSession()
 
+    // Re-verificar cada 5 minutos (plan, estado suscripción, permisos)
+    const interval = setInterval(syncSession, 5 * 60 * 1000)
+
     const { data: { subscription } } = supabaseApp.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearSession()
         router.push('/login')
       }
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         syncSession()
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearInterval(interval)
+      subscription.unsubscribe()
+    }
   }, [])
 }

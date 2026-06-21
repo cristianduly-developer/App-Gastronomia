@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { type PedidoQR } from '@/context/PedidosQRContext'
+import { type PedidoQR } from '@/context/AppRealtimeContext'
 
 interface Props {
   pedido: PedidoQR
@@ -25,24 +25,24 @@ export function PedidoQRPopup({ pedido, onCerrar }: Props) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-xl">📱</span>
+            <span className="text-xl">ðŸ“±</span>
             <div>
               <p className="text-sm font-bold text-white">Nuevo pedido QR</p>
               <p className="text-xs text-violet-400">{pedido.mesa_nombre}</p>
             </div>
           </div>
-          <button onClick={onCerrar} className="text-gray-500 hover:text-white transition text-lg leading-none mt-0.5">×</button>
+          <button onClick={onCerrar} className="text-gray-500 hover:text-white transition text-lg leading-none mt-0.5">Ã—</button>
         </div>
 
         <div className="space-y-1 mb-3">
           {pedido.items.slice(0, 3).map((item, i) => (
             <p key={i} className="text-xs text-gray-300">
-              <span className="font-semibold">{item.cantidad}×</span> {item.nombre}
-              {item.observacion && <span className="text-amber-400 italic"> — {item.observacion}</span>}
+              <span className="font-semibold">{item.cantidad}Ã—</span> {item.nombre}
+              {item.observacion && <span className="text-amber-400 italic"> â€” {item.observacion}</span>}
             </p>
           ))}
           {pedido.items.length > 3 && (
-            <p className="text-xs text-gray-500">+{pedido.items.length - 3} más...</p>
+            <p className="text-xs text-gray-500">+{pedido.items.length - 3} mÃ¡s...</p>
           )}
         </div>
 
@@ -52,10 +52,11 @@ export function PedidoQRPopup({ pedido, onCerrar }: Props) {
             onClick={() => { router.push('/pedidos'); onCerrar() }}
             className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
           >
-            Ver pedido →
+            Ver pedido â†’
           </button>
         </div>
       </div>
     </div>
   )
 }
+

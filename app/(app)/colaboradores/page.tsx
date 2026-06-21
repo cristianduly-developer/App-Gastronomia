@@ -138,7 +138,7 @@ export default function ColaboradoresPage() {
         activo: true,
         mesas_asignadas: mesasAsignadasFinal,
       })
-      if (err) { setError('Error al guardar'); setGuardando(false); return }
+      if (err) { setError(err.message.includes('límite') ? err.message : 'Error al guardar el colaborador'); setGuardando(false); return }
     }
 
     setGuardando(false)
