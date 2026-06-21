@@ -31,72 +31,23 @@ export async function POST(req: NextRequest) {
     process.env.CENTRAL_SERVICE_KEY!,
   )
 
-  const { data: orgsExistentes, error: orgQueryErr } = await central
-    .from('organizaciones')
-    .select('id')
-    .eq('email_contacto', email)
-    .limit(1)
+  const nombre = nombreGoogle || email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const { data: rpcResult, error: rpcErr } = await central.rpc('registrar_demo', {
+    p_email:     email,
+    p_nombre:    nombre,
+    p_app_id:    APP_ID,
+    p_owner_id:  OWNER_ID,
+    p_demo_dias: DEMO_DIAS,
+  })
 
-  if (orgQueryErr) {
-    console.error('[registrar-demo] Error buscando org:', orgQueryErr)
+  if (rpcErr) {
+    console.error('[registrar-demo] Error RPC:', rpcErr)
     return NextResponse.json({ ok: false, error: 'error_central' }, { status: 500 })
   }
 
-  let orgId: string
+  if (rpcResult?.ya_existe) return NextResponse.json({ ok: true, ya_existe: true })
 
-  if (orgsExistentes && orgsExistentes.length > 0) {
-    orgId = orgsExistentes[0].id
-    const { data: subExistente } = await central
-      .from('suscripciones_apps')
-      .select('id')
-      .eq('org_id', orgId)
-      .eq('app_id', APP_ID)
-      .limit(1)
-      .maybeSingle()
-    if (subExistente) {
-      return NextResponse.json({ ok: true, ya_existe: true })
-    }
-  } else {
-    const nombre = email
-      .split('@')[0]
-      .replace(/[._]/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase())
-    const { data: org, error: orgErr } = await central
-      .from('organizaciones')
-      .insert({ nombre: nombreGoogle || nombre, email_contacto: email, owner_id: OWNER_ID })
-      .select('id')
-      .single()
-    if (orgErr || !org) {
-      console.error('[registrar-demo] Error creando org:', orgErr)
-      return NextResponse.json({ ok: false, error: 'error_central' }, { status: 500 })
-    }
-    orgId = org.id
-  }
-
-  // Siempre asegurar que el empleado exista
-  await central
-    .from('empleados_organizacion')
-    .upsert({ org_id: orgId, email }, { onConflict: 'org_id,email', ignoreDuplicates: true })
-    .then(({ error: e }) => { if (e) console.error('[registrar-demo] Error empleado:', e) })
-
-  const hoy = new Date().toISOString().slice(0, 10)
-  const vencimiento = new Date(Date.now() + DEMO_DIAS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  const { error: subErr } = await central
-    .from('suscripciones_apps')
-    .insert({
-      org_id:            orgId,
-      app_id:            APP_ID,
-      plan:              'profesional',
-      estado:            'demo',
-      fecha_inicio_demo: hoy,
-      limite_demo_dias:  DEMO_DIAS,
-      fecha_vencimiento: vencimiento,
-    })
-
-  if (subErr) {
-    console.error('[registrar-demo] Error creando suscripción:', subErr)
-    return NextResponse.json({ ok: false, error: 'error_central' }, { status: 500 })
-  }
+  const orgId = rpcResult?.org_id
 
   // Crear config_local en la app para que el onboarding funcione
   const { error: configErr } = await supabaseAdmin
@@ -111,9 +62,6 @@ export async function POST(req: NextRequest) {
   if (configErr) {
     console.error('[registrar-demo] Error creando config_local:', configErr)
   }
-
-  // Insertar notificación en el panel admin
-  await central.from('notificaciones_admin').insert({ org_id: orgId, tipo: 'nueva_org', app_id: APP_ID })
 
   // Notificar al admin por email
   try {
