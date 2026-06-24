@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from '@/lib/sessionStore'
@@ -9,18 +9,18 @@ import { usePedidosQR } from '@/context/AppRealtimeContext'
 import { usePedidosDelivery } from '@/context/AppRealtimeContext'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',    emoji: 'ðŸ“Š', permiso: 'verDashboard',    config: null },
-  { href: '/ventas',        label: 'Ventas',       emoji: 'ðŸ’°', permiso: 'verVentas',        config: null },
-  { href: '/mesas',         label: 'Mesas',        emoji: 'ðŸª‘', permiso: 'verMesas',         config: 'usaMesas' },
-  { href: '/pedidos',       label: 'Pedidos QR',   emoji: 'ðŸ“‹', permiso: 'verComandas',      config: 'usaQr' },
-  { href: '/cocina',        label: 'Cocina',       emoji: 'ðŸ‘¨â€ðŸ³', permiso: 'verCocina',        config: 'usaCocina' },
-  { href: '/delivery',      label: 'Delivery',     emoji: 'ðŸ›µ',  permiso: 'verDelivery',     config: 'usaDelivery' },
-  { href: '/productos',     label: 'Productos',    emoji: 'ðŸ”', permiso: 'verProductos',     config: null },
-  { href: '/clientes',      label: 'Clientes',     emoji: 'ðŸ‘¥', permiso: 'verClientes',      config: null },
-  { href: '/caja',          label: 'Caja',         emoji: 'ðŸ§', permiso: 'verCaja',          config: null },
-  { href: '/reportes',      label: 'Reportes',     emoji: 'ðŸ“ˆ', permiso: 'verReportes',      config: null },
-  { href: '/colaboradores', label: 'Colaboradores',emoji: 'ðŸ‘¥', permiso: 'verColaboradores', config: null },
-  { href: '/configuracion', label: 'ConfiguraciÃ³n',emoji: 'âš™ï¸', permiso: 'verConfig',        config: null },
+  { href: '/dashboard',     label: 'Dashboard',      emoji: '📊', permiso: 'verDashboard',    config: null },
+  { href: '/ventas',        label: 'Ventas',         emoji: '💰', permiso: 'verVentas',        config: null },
+  { href: '/mesas',         label: 'Mesas',          emoji: '🪑', permiso: 'verMesas',         config: 'usaMesas' },
+  { href: '/pedidos',       label: 'Pedidos QR',     emoji: '📋', permiso: 'verComandas',      config: 'usaQr' },
+  { href: '/cocina',        label: 'Cocina',         emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
+  { href: '/delivery',      label: 'Delivery',       emoji: '🛵', permiso: 'verDelivery',      config: 'usaDelivery' },
+  { href: '/productos',     label: 'Productos',      emoji: '🍔', permiso: 'verProductos',     config: null },
+  { href: '/clientes',      label: 'Clientes',       emoji: '👥', permiso: 'verClientes',      config: null },
+  { href: '/caja',          label: 'Caja',           emoji: '🧾', permiso: 'verCaja',          config: null },
+  { href: '/reportes',      label: 'Reportes',       emoji: '📈', permiso: 'verReportes',      config: null },
+  { href: '/colaboradores', label: 'Colaboradores',  emoji: '👥', permiso: 'verColaboradores', config: null },
+  { href: '/configuracion', label: 'Configuración',  emoji: '⚙️',  permiso: 'verConfig',        config: null },
 ] as const
 
 export function Sidebar() {
@@ -47,7 +47,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-5 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center text-lg">ðŸ½ï¸</div>
+          <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center text-lg">🍽️</div>
           <div>
             <p className="text-sm font-bold text-white truncate max-w-[140px]">
               {nombreNegocio || 'GastroApp'}
@@ -93,11 +93,10 @@ export function Sidebar() {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
         >
-          <span className="text-base">ðŸšª</span>
-          Cerrar sesiÃ³n
+          <span className="text-base">🚪</span>
+          Cerrar sesión
         </button>
       </div>
     </aside>
   )
 }
-
