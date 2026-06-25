@@ -6,9 +6,11 @@ import { PedidoDeliveryPopup } from '@/components/PedidoDeliveryPopup'
 import { ItemListoPopup } from '@/components/ItemListoPopup'
 import { AppRealtimeProvider, usePedidosQR, usePedidosDelivery } from '@/context/AppRealtimeContext'
 import { useSessionGuard } from '@/hooks/useSessionGuard'
+import { useInactivityLogout } from '@/hooks/useInactivityLogout'
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
   useSessionGuard()
+  useInactivityLogout()
   const { nuevoPedido: nuevoQR, cerrarNuevo: cerrarQR } = usePedidosQR()
   const { nuevoPedido: nuevoDelivery, cerrarNuevo: cerrarDelivery } = usePedidosDelivery()
 
