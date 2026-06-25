@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     console.error('[registrar-demo] Error creando config_local:', configErr)
   }
 
-  // Notificar al admin por email
+  // Notificar al admin y dar bienvenida al usuario
   try {
     const { data: orgData } = await central
       .from('organizaciones')
@@ -72,30 +72,67 @@ export async function POST(req: NextRequest) {
       .single()
 
     const fechaAlta = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+    const mailFrom = process.env.MAIL_FROM ?? 'onboarding@resend.dev'
+    const appUrl = 'https://app-gastronomia.vercel.app'
 
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: 'cristianduly@gmail.com',
-        subject: `🆕 Nueva cuenta demo — ${orgData?.nombre ?? email}`,
-        html: `
-          <h2>🆕 Nueva cuenta demo en App de Gastronomía</h2>
-          <table style="border-collapse:collapse;font-family:sans-serif;">
-            <tr><td style="padding:8px;font-weight:bold;">Nombre</td><td style="padding:8px;">${orgData?.nombre ?? '—'}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;">${orgData?.email_contacto ?? email}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">App</td><td style="padding:8px;">Gastronomía</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Plan</td><td style="padding:8px;">Profesional (demo)</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Días de prueba</td><td style="padding:8px;">${DEMO_DIAS} días</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Fecha de alta</td><td style="padding:8px;">${fechaAlta}</td></tr>
-          </table>
-        `,
+    const bienvenidaHtml = `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+        <div style="background:#ea580c;padding:32px 24px;text-align:center;">
+          <div style="font-size:40px;">🍽️</div>
+          <h1 style="color:white;margin:8px 0 4px;font-size:22px;">App Gastronomía</h1>
+          <p style="color:rgba(255,255,255,.85);margin:0;font-size:14px;">Soluciones MDP</p>
+        </div>
+        <div style="padding:32px 24px;">
+          <h2 style="margin:0 0 8px;font-size:20px;color:#111827;">¡Hola, ${nombre}!</h2>
+          <p style="color:#374151;margin:0 0 24px;font-size:15px;line-height:1.6;">
+            Tu prueba gratuita de <strong>${DEMO_DIAS} días</strong> ya está activa. Podés empezar a gestionar tu negocio gastronómico ahora mismo.
+          </p>
+          <div style="background:#f9fafb;border-radius:10px;padding:20px;margin-bottom:24px;">
+            <p style="margin:0 0 12px;font-weight:700;color:#111827;font-size:13px;text-transform:uppercase;letter-spacing:.5px;">¿Qué podés hacer?</p>
+            <p style="margin:0 0 8px;color:#374151;font-size:14px;">✅ Gestionar pedidos, mesas y delivery</p>
+            <p style="margin:0 0 8px;color:#374151;font-size:14px;">✅ Registrar cobros y ver el cierre de caja</p>
+            <p style="margin:0 0 0;color:#374151;font-size:14px;">✅ Controlar tu menú y los gastos del negocio</p>
+          </div>
+          <div style="text-align:center;">
+            <a href="${appUrl}" style="display:inline-block;background:#ea580c;color:white;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Abrir App Gastronomía →</a>
+          </div>
+        </div>
+        <div style="border-top:1px solid #f1f5f9;padding:20px 24px;text-align:center;">
+          <p style="margin:0;color:#9ca3af;font-size:12px;">Soluciones MDP · Si tenés dudas respondé este mail</p>
+        </div>
+      </div>`
+
+    await Promise.all([
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: mailFrom,
+          to: email,
+          subject: `¡Bienvenido/a a App Gastronomía! Tu prueba de ${DEMO_DIAS} días está activa`,
+          html: bienvenidaHtml,
+        }),
       }),
-    })
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: mailFrom,
+          to: 'cristianduly@gmail.com',
+          subject: `🆕 Nueva cuenta demo — ${orgData?.nombre ?? email}`,
+          html: `
+            <h2>🆕 Nueva cuenta demo en App de Gastronomía</h2>
+            <table style="border-collapse:collapse;font-family:sans-serif;">
+              <tr><td style="padding:8px;font-weight:bold;">Nombre</td><td style="padding:8px;">${orgData?.nombre ?? '—'}</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;">${orgData?.email_contacto ?? email}</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">App</td><td style="padding:8px;">Gastronomía</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Plan</td><td style="padding:8px;">Profesional (demo)</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Días de prueba</td><td style="padding:8px;">${DEMO_DIAS} días</td></tr>
+              <tr><td style="padding:8px;font-weight:bold;">Fecha de alta</td><td style="padding:8px;">${fechaAlta}</td></tr>
+            </table>`,
+        }),
+      }),
+    ])
   } catch (mailErr) {
     console.error('[registrar-demo] Error enviando email:', mailErr)
   }
