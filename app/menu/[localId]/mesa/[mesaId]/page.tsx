@@ -150,12 +150,19 @@ export default function MenuMesaPage({ params }: { params: { localId: string; me
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center text-lg flex-shrink-0">🍽️</div>
-            <div>
-              <h1 className="font-bold text-white text-base leading-tight">{config.nombre_negocio}</h1>
-              <p className="text-xs text-gray-400">{mesaNombre}</p>
+
+        {/* Nombre del negocio + mesa */}
+        <div className="max-w-lg mx-auto px-4 pt-4 pb-3 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 bg-violet-600 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 shadow-lg shadow-violet-900/40">
+              🍽️
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-bold text-white text-lg leading-tight truncate">{config.nombre_negocio}</h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                <p className="text-xs text-gray-400 truncate">{mesaNombre}</p>
+              </div>
             </div>
           </div>
           {cart.length > 0 && paso === 'menu' && (
@@ -163,10 +170,8 @@ export default function MenuMesaPage({ params }: { params: { localId: string; me
               onClick={() => setPaso('carrito')}
               className="relative bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition flex-shrink-0"
             >
-              Ver pedido
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center font-bold">
-                {cart.reduce((s, i) => s + i.cantidad, 0)}
-              </span>
+              🛒 <span className="ml-1">{cart.reduce((s, i) => s + i.cantidad, 0)}</span>
+              <span className="ml-1 hidden xs:inline">pedido</span>
             </button>
           )}
         </div>
@@ -177,8 +182,8 @@ export default function MenuMesaPage({ params }: { params: { localId: string; me
               <input
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2 text-sm placeholder:text-gray-500 focus:outline-none"
+                placeholder="Buscar en el menú..."
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500 transition"
               />
             </div>
             {categorias.length > 0 && (
