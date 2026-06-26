@@ -130,15 +130,13 @@ export default function ColaboradoresPage() {
 
       if (existe) { setError('Ese email ya está registrado como colaborador'); setGuardando(false); return }
 
-      const { error: err } = await supabaseApp.from('colaboradores').insert({
-        local_id: localId,
-        nombre: form.nombre.trim(),
-        email: form.email.trim().toLowerCase(),
-        rol: form.rol,
-        activo: true,
-        mesas_asignadas: mesasAsignadasFinal,
+      const { data: { session } } = await supabaseApp.auth.getSession()
+      const res = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ nombre: form.nombre.trim(), email: form.email.trim().toLowerCase(), rol: form.rol, localId, mesasAsignadas: mesasAsignadasFinal }),
       })
-      if (err) { setError(err.message.includes('límite') ? err.message : 'Error al guardar el colaborador'); setGuardando(false); return }
+      if (!res.ok) { const d = await res.json(); setError(d.error || 'Error al guardar el colaborador'); setGuardando(false); return }
     }
 
     setGuardando(false)
