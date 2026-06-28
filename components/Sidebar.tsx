@@ -117,8 +117,16 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Logout */}
-      <div className="p-3 border-t border-gray-800">
+      {/* Ayuda + Logout */}
+      <div className="p-3 border-t border-gray-800 space-y-1">
+        <a
+          href="https://gastronomia.solucionesmdp.com.ar/ayuda"
+          onClick={(e) => { e.preventDefault(); window.location.href = 'https://gastronomia.solucionesmdp.com.ar/ayuda' }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
+        >
+          <span className="text-base">📖</span>
+          Centro de ayuda
+        </a>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"

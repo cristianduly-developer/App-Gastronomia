@@ -100,6 +100,13 @@ function PantallaDemoVencido({ onLogout }: { onLogout: () => void }) {
         >
           💬 Contactar para activar
         </a>
+        <a
+          href="https://gastronomia.solucionesmdp.com.ar/ayuda"
+          onClick={(e) => { e.preventDefault(); window.location.href = 'https://gastronomia.solucionesmdp.com.ar/ayuda' }}
+          className="text-xs text-violet-500 hover:text-violet-400 transition"
+        >
+          📖 Ver guía de ayuda
+        </a>
         <button onClick={onLogout} className="w-full py-3 rounded-2xl text-gray-500 text-sm border border-gray-800">
           Salir
         </button>
@@ -125,6 +132,13 @@ function PantallaSuspendida({ onLogout }: { onLogout: () => void }) {
           className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 active:scale-95 transition-all"
         >
           💬 Contactar al administrador
+        </a>
+        <a
+          href="https://gastronomia.solucionesmdp.com.ar/ayuda"
+          onClick={(e) => { e.preventDefault(); window.location.href = 'https://gastronomia.solucionesmdp.com.ar/ayuda' }}
+          className="text-xs text-violet-500 hover:text-violet-400 transition"
+        >
+          📖 Ver guía de ayuda
         </a>
         <button onClick={onLogout} className="w-full py-3 rounded-2xl text-gray-500 text-sm border border-gray-800">
           Salir
@@ -380,7 +394,17 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">Versión 1.0.0</p>
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <p className="text-gray-600 text-xs">Versión 1.0.0</p>
+          <span className="text-gray-700">·</span>
+          <a
+            href="https://gastronomia.solucionesmdp.com.ar/ayuda"
+            onClick={(e) => { e.preventDefault(); window.location.href = 'https://gastronomia.solucionesmdp.com.ar/ayuda' }}
+            className="text-xs text-violet-500 hover:text-violet-400 transition"
+          >
+            📖 Centro de ayuda
+          </a>
+        </div>
       </div>
     </div>
   )

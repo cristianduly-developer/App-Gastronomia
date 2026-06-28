@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centro de Ayuda — GastroApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #030712;
+      --surface: #111827;
+      --surface2: #1f2937;
+      --border: #374151;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --violet: #7c3aed;
+      --violet-light: #8b5cf6;
+      --violet-bg: #1e1333;
+      --green: #059669;
+      --amber: #d97706;
+      --blue: #2563eb;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* Header */
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+    .logo-icon { width: 36px; height: 36px; background: var(--violet); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .logo-text { font-weight: 700; color: var(--text); font-size: 1rem; }
+    .logo-badge { background: var(--violet-bg); color: var(--violet-light); font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 99px; border: 1px solid var(--violet); white-space: nowrap; }
+    .btn-app { background: var(--violet); color: white; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 10px; text-decoration: none; transition: background 0.2s; white-space: nowrap; }
+    .btn-app:hover { background: var(--violet-light); }
+
+    /* Layout */
+    .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 220px 1fr; gap: 2.5rem; }
+    @media (max-width: 768px) { .layout { grid-template-columns: 1fr; padding: 1rem; } }
+
+    /* Sidebar nav */
+    .sidebar { display: flex; flex-direction: column; gap: 0.25rem; position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow-y: auto; }
+    .sidebar a { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 8px; text-decoration: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--violet-bg); color: var(--violet-light); }
+    @media (max-width: 768px) { .sidebar { display: none; } }
+
+    /* Mobile pills */
+    .mobile-nav { display: none; position: sticky; top: 60px; z-index: 90; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0.5rem 1rem; overflow-x: auto; gap: 0.5rem; scrollbar-width: none; }
+    .mobile-nav::-webkit-scrollbar { display: none; }
+    @media (max-width: 768px) { .mobile-nav { display: flex; } }
+    .mobile-nav a { flex-shrink: 0; padding: 0.35rem 0.85rem; border-radius: 99px; background: var(--surface); color: var(--muted); font-size: 0.8rem; font-weight: 500; text-decoration: none; border: 1px solid var(--border); white-space: nowrap; }
+    .mobile-nav a:hover { background: var(--violet-bg); color: var(--violet-light); border-color: var(--violet); }
+
+    /* Content */
+    .content { min-width: 0; }
+    .hero { background: linear-gradient(135deg, var(--violet-bg) 0%, var(--surface) 100%); border: 1px solid var(--violet); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+    .hero h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .hero p { color: var(--muted); font-size: 0.95rem; }
+
+    section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+    .section-title { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text); }
+    .card p, .card li { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+    .card ul { padding-left: 1.25rem; }
+    .card ul li { margin-bottom: 0.25rem; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 0.75rem; }
+    .step { display: flex; gap: 1rem; align-items: flex-start; }
+    .step-num { width: 28px; height: 28px; background: var(--violet); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; color: white; }
+    .step-text { font-size: 0.875rem; color: var(--muted); padding-top: 0.3rem; line-height: 1.6; }
+    .step-text strong { color: var(--text); }
+
+    /* Tips */
+    .tip, .warn, .info { border-radius: 10px; padding: 0.875rem 1rem; font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.6; }
+    .tip { background: #052e16; border: 1px solid #166534; color: #86efac; }
+    .warn { background: #451a03; border: 1px solid #92400e; color: #fcd34d; }
+    .info { background: #0c1a3a; border: 1px solid #1e3a8a; color: #93c5fd; }
+    .tip strong, .warn strong, .info strong { display: block; margin-bottom: 0.2rem; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { background: var(--surface2); color: var(--text); font-weight: 600; padding: 0.75rem 1rem; text-align: left; }
+    td { padding: 0.65rem 1rem; border-top: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+    tr:hover td { background: var(--surface2); }
+    .check { color: #4ade80; }
+    .cross { color: #f87171; }
+
+    /* Tags */
+    .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .tag { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 99px; }
+    .tag.violet { background: var(--violet-bg); border-color: var(--violet); color: var(--violet-light); }
+
+    /* FAQ */
+    details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; }
+    summary { padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; font-size: 1.2rem; color: var(--violet-light); }
+    details[open] summary::after { content: '−'; }
+    details p { padding: 0 1.25rem 1rem; font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+    /* Footer */
+    .footer { background: var(--surface); border-top: 1px solid var(--border); padding: 2rem 1.5rem; margin-top: 3rem; text-align: center; }
+    .footer p { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .footer a { color: var(--violet-light); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <a href="https://gastronomia.solucionesmdp.com.ar" class="logo">
+      <div class="logo-icon">🍽️</div>
+      <span class="logo-text">GastroApp</span>
+      <span class="logo-badge">Centro de ayuda</span>
+    </a>
+    <a href="https://gastronomia.solucionesmdp.com.ar/dashboard" class="btn-app">Abrir app →</a>
+  </div>
+</header>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav">
+  <a href="#inicio">🏠 Inicio</a>
+  <a href="#ventas">💰 Ventas</a>
+  <a href="#caja">🧾 Caja</a>
+  <a href="#mesas">🪑 Mesas</a>
+  <a href="#cocina">👨‍🍳 Cocina</a>
+  <a href="#delivery">🛵 Delivery</a>
+  <a href="#qr">📱 Menú QR</a>
+  <a href="#productos">🍔 Productos</a>
+  <a href="#colaboradores">👥 Colaboradores</a>
+  <a href="#config">⚙️ Config</a>
+  <a href="#planes">⭐ Planes</a>
+  <a href="#faq">❓ FAQ</a>
+</nav>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <a href="#inicio">🏠 Dashboard</a>
+    <a href="#ventas">💰 Ventas</a>
+    <a href="#caja">🧾 Caja</a>
+    <a href="#mesas">🪑 Mesas y comandas</a>
+    <a href="#cocina">👨‍🍳 Cocina</a>
+    <a href="#delivery">🛵 Delivery</a>
+    <a href="#qr">📱 Menú QR</a>
+    <a href="#productos">🍔 Productos</a>
+    <a href="#colaboradores">👥 Colaboradores</a>
+    <a href="#config">⚙️ Configuración</a>
+    <a href="#planes">⭐ Planes</a>
+    <a href="#faq">❓ Preguntas frecuentes</a>
+    <a href="#contacto">📞 Contacto</a>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+
+    <div class="hero">
+      <h1>Centro de ayuda de GastroApp 🍽️</h1>
+      <p>Todo lo que necesitás saber para gestionar tu negocio gastronómico. Encontrá respuestas rápidas o explorá cada módulo en detalle.</p>
+    </div>
+
+    <!-- INICIO -->
+    <section id="inicio">
+      <div class="section-title"><span>🏠</span> Dashboard</div>
+      <div class="card">
+        <h3>¿Qué muestra el Dashboard?</h3>
+        <p>Es la pantalla principal al ingresar a la app. Muestra un resumen del día:</p>
+        <ul style="margin-top:0.5rem">
+          <li>Ventas del día (total en pesos)</li>
+          <li>Cantidad de tickets/ventas realizadas</li>
+          <li>Pedidos pendientes de delivery</li>
+          <li>Estado actual de la caja</li>
+          <li>Accesos rápidos a las secciones principales</li>
+        </ul>
+      </div>
+      <div class="tip"><strong>💡 Tip</strong> El Dashboard se actualiza en tiempo real. Si tenés varias pantallas abiertas (caja, cocina), todas se sincronizan automáticamente.</div>
+    </section>
+
+    <!-- VENTAS -->
+    <section id="ventas">
+      <div class="section-title"><span>💰</span> Ventas</div>
+      <div class="card">
+        <h3>¿Cómo registrar una venta?</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Abrí la <strong>Caja</strong> del día antes de empezar.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Ingresá a <strong>Ventas</strong> desde el menú.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Tocá los productos para agregarlos al carrito. Podés cambiar la cantidad con + y −.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Elegí el método de pago: <strong>Efectivo, Tarjeta o Transferencia</strong>.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Tocá <strong>Cobrar</strong>. La venta queda registrada en la caja automáticamente.</div></div>
+        </div>
+      </div>
+      <div class="warn"><strong>⚠️ Atención</strong> La caja tiene que estar abierta para registrar ventas. Si aparece un mensaje bloqueando la pantalla, primero andá a Caja y abrila.</div>
+      <div class="card">
+        <h3>Desde el celular</h3>
+        <p>En mobile, el carrito aparece como un botón flotante abajo. Tocalo para ver los ítems seleccionados y proceder al cobro.</p>
+      </div>
+    </section>
+
+    <!-- CAJA -->
+    <section id="caja">
+      <div class="section-title"><span>🧾</span> Caja</div>
+      <div class="card">
+        <h3>Cómo funciona la caja</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Abrir caja</strong>: Ingresá el monto de efectivo inicial (el "fondo" de caja).</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Durante el día, todas las ventas se acumulan automáticamente.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Cerrar caja</strong>: Al final del turno, ingresá el efectivo real en mano. La app calcula la diferencia.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Resumen de caja</h3>
+        <p>Al cerrar la caja podés ver:</p>
+        <ul style="margin-top:0.5rem">
+          <li>Total vendido por método de pago</li>
+          <li>Efectivo esperado vs. efectivo real</li>
+          <li>Diferencia (sobrante o faltante)</li>
+        </ul>
+      </div>
+      <div class="tip"><strong>💡 Tip</strong> Solo se puede tener una caja abierta por vez. Si alguien la cerró por error, volvé a abrirla con el monto actual en caja.</div>
+    </section>
+
+    <!-- MESAS -->
+    <section id="mesas">
+      <div class="section-title"><span>🪑</span> Mesas y Comandas</div>
+      <div class="card">
+        <h3>Gestión de mesas</h3>
+        <p>La sección Mesas muestra el estado de cada mesa en tiempo real:</p>
+        <div class="tags" style="margin-top:0.75rem">
+          <span class="tag" style="background:#052e16;border-color:#166534;color:#86efac">🟢 Libre</span>
+          <span class="tag" style="background:#451a03;border-color:#92400e;color:#fcd34d">🟡 Ocupada</span>
+          <span class="tag" style="background:#1e1b4b;border-color:#4338ca;color:#a5b4fc">🔵 Con pedidos listos</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cómo crear una comanda</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Tocá una <strong>mesa</strong> para abrirla.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá <strong>Nueva comanda</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Seleccioná los productos. Podés agregar <strong>observaciones</strong> por ítem (ej: sin cebolla).</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Tocá <strong>Pasar a cocina</strong>. Los ítems aparecen en el monitor de cocina al instante.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cobrar una mesa</h3>
+        <p>Desde el detalle de la mesa, tocá <strong>Cobrar</strong>. Seleccioná el método de pago y confirmá. La mesa vuelve a estado "Libre" automáticamente.</p>
+      </div>
+      <div class="info"><strong>ℹ️ Info</strong> Las mesas se configuran en <strong>Configuración → Mesas</strong>. Podés agregar, editar o eliminar mesas en cualquier momento.</div>
+    </section>
+
+    <!-- COCINA -->
+    <section id="cocina">
+      <div class="section-title"><span>👨‍🍳</span> Monitor de Cocina</div>
+      <div class="card">
+        <h3>¿Qué es el monitor de cocina?</h3>
+        <p>Una pantalla en tiempo real para el personal de cocina. Muestra todos los ítems de comandas y delivery en estado <strong>pendiente</strong>, ordenados por hora de llegada.</p>
+      </div>
+      <div class="card">
+        <h3>Flujo de un ítem</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Llega el ítem como <strong>Pendiente</strong> (aparece en rojo/naranja).</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">El cocinero toca el ítem para marcarlo como <strong>En preparación</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Al terminarlo, lo marca como <strong>Listo</strong>. El mozo recibe una notificación.</div></div>
+        </div>
+      </div>
+      <div class="tip"><strong>💡 Tip</strong> El monitor de cocina suena cuando llega un pedido nuevo. Podés dejarlo abierto en una tablet o pantalla dedicada.</div>
+    </section>
+
+    <!-- DELIVERY -->
+    <section id="delivery">
+      <div class="section-title"><span>🛵</span> Delivery</div>
+      <div class="card">
+        <h3>Cómo cargar un pedido de delivery</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Ingresá a <strong>Delivery</strong> desde el menú.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá <strong>Nuevo pedido</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Ingresá el teléfono del cliente. Si ya hizo pedidos antes, aparecen sus datos automáticamente.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Elegí si <strong>retira en local</strong> o si tiene dirección de entrega.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Agregá los productos y confirmá. El pedido pasa a cocina automáticamente.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Estados de un pedido</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Estado</th><th>Significado</th></tr>
+            <tr><td>Recibido</td><td>Llegó pero no se aceptó todavía</td></tr>
+            <tr><td>En preparación</td><td>Cocina lo está haciendo</td></tr>
+            <tr><td>Listo</td><td>Esperando al repartidor o cliente</td></tr>
+            <tr><td>Entregado</td><td>Finalizado</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="info"><strong>ℹ️ Info</strong> Si los clientes piden desde el link público de delivery, el pedido aparece automáticamente con una notificación sonora.</div>
+    </section>
+
+    <!-- QR -->
+    <section id="qr">
+      <div class="section-title"><span>📱</span> Menú QR</div>
+      <div class="card">
+        <h3>¿Cómo funciona el menú QR?</h3>
+        <p>Cada mesa tiene un código QR único. El cliente lo escanea con la cámara del celular, ve el menú completo y puede hacer su pedido directamente desde la mesa — sin que intervenga el mozo.</p>
+      </div>
+      <div class="card">
+        <h3>Cómo obtener el QR de una mesa</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Andá a <strong>Mesas</strong> y tocá la mesa.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá el ícono de QR o "Ver QR".</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Imprimilo o mostralo en pantalla. El cliente lo escanea y accede al menú.</div></div>
+        </div>
+      </div>
+      <div class="tip"><strong>💡 Tip</strong> El menú QR muestra solo los productos <strong>activos y no agotados</strong>. Si marcás un producto como agotado, desaparece del menú automáticamente.</div>
+      <div class="warn"><strong>⚠️ Requisito</strong> Para habilitar el menú QR, activá la opción <strong>Usar pedidos QR</strong> en Configuración.</div>
+    </section>
+
+    <!-- PRODUCTOS -->
+    <section id="productos">
+      <div class="section-title"><span>🍔</span> Productos</div>
+      <div class="card">
+        <h3>Cómo agregar un producto</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Andá a <strong>Productos</strong>.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá <strong>+ Nuevo producto</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Completá nombre, precio y categoría (opcional).</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Guardá. El producto aparece en Ventas, Mesas y el Menú QR de inmediato.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Marcar como agotado</h3>
+        <p>Desde la lista de productos, tocá el botón <strong>Disponible / Agotado</strong> en cada ítem. Los productos agotados no aparecen en el menú QR ni en la carta.</p>
+      </div>
+      <div class="card">
+        <h3>Categorías</h3>
+        <p>Organizá tus productos en categorías (Entradas, Principales, Postres, Bebidas...). En el tab <strong>Categorías</strong> podés crear, editar y eliminar.</p>
+      </div>
+      <div class="info"><strong>ℹ️ Límites por plan</strong> El plan Básico permite hasta 30 productos activos. El plan Profesional hasta 200. El plan Premium no tiene límite.</div>
+    </section>
+
+    <!-- COLABORADORES -->
+    <section id="colaboradores">
+      <div class="section-title"><span>👥</span> Colaboradores</div>
+      <div class="card">
+        <h3>Roles disponibles</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Rol</th><th>Acceso</th></tr>
+            <tr><td><strong>Owner</strong></td><td>Todo — el dueño de la cuenta</td></tr>
+            <tr><td><strong>Cajero</strong></td><td>Ventas, Caja, Delivery</td></tr>
+            <tr><td><strong>Mozo</strong></td><td>Mesas, Comandas, ver ítems listos</td></tr>
+            <tr><td><strong>Cocinero</strong></td><td>Solo el monitor de Cocina</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cómo agregar un colaborador</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Andá a <strong>Colaboradores</strong>.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá <strong>+ Nuevo colaborador</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Ingresá el nombre, email y elegí el rol.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">El colaborador inicia sesión con Google usando ese email y tiene acceso automático.</div></div>
+        </div>
+      </div>
+      <div class="tip"><strong>💡 Mozos y mesas</strong> Podés asignar mesas específicas a cada mozo. Así cada mozo solo ve notificaciones de sus mesas asignadas.</div>
+    </section>
+
+    <!-- CONFIG -->
+    <section id="config">
+      <div class="section-title"><span>⚙️</span> Configuración</div>
+      <div class="card">
+        <h3>Opciones disponibles</h3>
+        <ul>
+          <li><strong>Nombre del negocio</strong> — aparece en el menú QR y en la app</li>
+          <li><strong>Tipo de negocio</strong> — restaurante, bar, cafetería, etc.</li>
+          <li><strong>Habilitar Mesas</strong> — activa el módulo de mesas y comandas</li>
+          <li><strong>Habilitar Delivery</strong> — activa el módulo de delivery</li>
+          <li><strong>Habilitar Cocina</strong> — activa el monitor de cocina</li>
+          <li><strong>Habilitar Pedidos QR</strong> — activa el menú QR para clientes</li>
+          <li><strong>Mesas</strong> — agregar, editar o eliminar mesas</li>
+        </ul>
+      </div>
+      <div class="warn"><strong>⚠️ Importante</strong> Si desactivás un módulo (ej: Mesas), desaparece del menú para todos los usuarios. Los datos no se borran.</div>
+    </section>
+
+    <!-- PLANES -->
+    <section id="planes">
+      <div class="section-title"><span>⭐</span> Planes</div>
+      <div class="card">
+        <h3>Comparativa de planes</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Función</th><th>Básico</th><th>Profesional</th><th>Premium</th></tr>
+            <tr><td>Ventas y Caja</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><td>Mesas y Comandas</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><td>Monitor de Cocina</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><td>Delivery</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><td>Menú QR</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><td>Colaboradores</td><td>Hasta 2</td><td>Hasta 10</td><td>Ilimitados</td></tr>
+            <tr><td>Productos activos</td><td>Hasta 30</td><td>Hasta 200</td><td>Ilimitados</td></tr>
+            <tr><td>Reportes avanzados</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="info"><strong>ℹ️ Demo de 28 días</strong> Al activar tu cuenta tenés 28 días gratis con todas las funciones del plan Profesional desbloqueadas. Sin tarjeta de crédito.</div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="section-title"><span>❓</span> Preguntas frecuentes</div>
+
+      <details>
+        <summary>¿Funciona sin conexión a internet?</summary>
+        <p>No. GastroApp necesita conexión a internet para funcionar. Todas las operaciones (ventas, comandas, delivery) se guardan en tiempo real en la nube. Te recomendamos tener una conexión WiFi estable en el local.</p>
+      </details>
+
+      <details>
+        <summary>¿Cómo instalo la app en el celular?</summary>
+        <p>GastroApp es una PWA (Progressive Web App). Abrí <strong>gastronomia.solucionesmdp.com.ar</strong> en Chrome (Android) o Safari (iPhone), tocá el menú del browser y elegí "Agregar a pantalla de inicio". La app se instala sin pasar por el App Store.</p>
+      </details>
+
+      <details>
+        <summary>¿Puedo tener varios dispositivos conectados al mismo tiempo?</summary>
+        <p>Sí. Podés tener la caja en una tablet, el monitor de cocina en otra pantalla y los mozos en sus celulares — todos conectados y sincronizados al mismo tiempo.</p>
+      </details>
+
+      <details>
+        <summary>¿Qué pasa si cierro la app por accidente?</summary>
+        <p>Nada. Todos los datos se guardan en la nube al instante. Al volver a abrir la app encontrás todo exactamente como lo dejaste.</p>
+      </details>
+
+      <details>
+        <summary>¿Cómo agrego a mi mozo o cocinero?</summary>
+        <p>Andá a <strong>Colaboradores</strong>, tocá "+ Nuevo colaborador", ingresá su email de Google y elegí el rol. La próxima vez que inicie sesión con ese email, tiene acceso automático sin que hagas nada más.</p>
+      </details>
+
+      <details>
+        <summary>¿Los clientes necesitan descargar algo para pedir por QR?</summary>
+        <p>No. El menú QR se abre directamente en el browser del celular del cliente. No necesita crear cuenta ni descargar ninguna app.</p>
+      </details>
+
+      <details>
+        <summary>¿Puedo cambiar el precio de un producto desde la caja?</summary>
+        <p>No. Los precios se gestionan desde <strong>Productos</strong>. Esto es intencional para mantener consistencia en los datos de ventas y evitar errores.</p>
+      </details>
+
+      <details>
+        <summary>¿Mis datos están seguros?</summary>
+        <p>Sí. Usamos <strong>Supabase</strong> como base de datos con cifrado en tránsito y en reposo. Cada local solo puede ver sus propios datos — es imposible acceder a información de otros negocios.</p>
+      </details>
+
+      <details>
+        <summary>¿Puedo exportar mis ventas a una planilla?</summary>
+        <p>Sí, desde <strong>Reportes</strong> podés ver el resumen de ventas por período. La exportación a planilla está disponible en los planes Profesional y Premium.</p>
+      </details>
+
+      <details>
+        <summary>¿Qué pasa cuando se vence el período de prueba?</summary>
+        <p>La app queda bloqueada hasta que activés tu suscripción. Tus datos no se borran — están guardados y volvés a verlos cuando activás tu plan. Contactanos por WhatsApp para activar.</p>
+      </details>
+    </section>
+
+    <!-- CONTACTO -->
+    <section id="contacto">
+      <div class="section-title"><span>📞</span> Contacto y soporte</div>
+      <div class="card">
+        <h3>¿Necesitás ayuda personalizada?</h3>
+        <p style="margin-bottom:1rem">Estamos disponibles para ayudarte a configurar la app, resolver dudas o reportar problemas.</p>
+        <div class="tags">
+          <a href="https://wa.me/5492235000000?text=Hola!%20Necesito%20ayuda%20con%20GastroApp" target="_blank" rel="noopener" class="tag violet" style="text-decoration:none;padding:0.4rem 0.9rem">💬 WhatsApp</a>
+          <a href="mailto:contacto@solucionesmdp.com.ar" class="tag violet" style="text-decoration:none;padding:0.4rem 0.9rem">✉️ Email</a>
+          <a href="https://solucionesmdp.com.ar" target="_blank" rel="noopener" class="tag violet" style="text-decoration:none;padding:0.4rem 0.9rem">🌐 Web</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <p>GastroApp — Sistema de gestión gastronómica</p>
+  <p>Desarrollado por <a href="https://solucionesmdp.com.ar" target="_blank">Soluciones MDP</a> · <a href="https://gastronomia.solucionesmdp.com.ar">Abrir app</a></p>
+</footer>
+
+<script>
+  // Sidebar active link on scroll
+  const sections = document.querySelectorAll('section[id]')
+  const links = document.querySelectorAll('.sidebar a')
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'))
+        const active = document.querySelector(`.sidebar a[href="#${entry.target.id}"]`)
+        if (active) active.classList.add('active')
+      }
+    })
+  }, { rootMargin: '-20% 0px -70% 0px' })
+  sections.forEach(s => observer.observe(s))
+</script>
+
+</body>
+</html>

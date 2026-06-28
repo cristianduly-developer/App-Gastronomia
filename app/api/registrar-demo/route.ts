@@ -101,7 +101,12 @@ export async function POST(req: NextRequest) {
             <p style="margin:0 0 0;color:#374151;font-size:14px;">✅ Controlar tu menú y los gastos del negocio</p>
           </div>
           <div style="text-align:center;">
-            <a href="${appUrl}" style="display:inline-block;background:#ea580c;color:white;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Abrir App Gastronomía →</a>
+            <a href="${appUrl}" style="display:inline-block;background:#7c3aed;color:white;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Abrir App Gastronomía →</a>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin-top:20px;">
+            <p style="margin:0 0 8px;font-weight:700;color:#166534;font-size:14px;">📖 ¿No sabés por dónde empezar?</p>
+            <p style="margin:0 0 12px;color:#374151;font-size:13px;line-height:1.5;">Tenemos una guía completa que explica cada sección de la app paso a paso.</p>
+            <a href="${appUrl}/ayuda" style="display:inline-block;background:#fff;border:1px solid #166534;color:#166534;padding:10px 20px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;">Ver guía de ayuda →</a>
           </div>
         </div>
         <div style="border-top:1px solid #f1f5f9;padding:20px 24px;text-align:center;">
