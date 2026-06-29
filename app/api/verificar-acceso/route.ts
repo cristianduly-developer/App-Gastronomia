@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
   if (acceso && acceso.tiene_acceso) {
     const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } })
-    const orgId = acceso.ret_org_id ?? acceso.org_id
+    const orgId = acceso.ret_org_id ?? (acceso as any).org_id
     const { data: subRow } = await central
       .from('suscripciones_apps')
       .select('cant_sesiones')
