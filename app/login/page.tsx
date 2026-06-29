@@ -177,7 +177,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const res = await fetch(`/api/verificar-acceso?email=${encodeURIComponent(email)}`, {
+      const res = await fetch(`/api/verificar-acceso`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
       const json = await res.json()
