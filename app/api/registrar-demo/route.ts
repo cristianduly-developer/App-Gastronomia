@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           </div>
         </div>
         <div style="border-top:1px solid #f1f5f9;padding:20px 24px;text-align:center;">
-          <p style="margin:0;color:#9ca3af;font-size:12px;">Soluciones MDP · <a href="https://wa.me/5492235767784" style="color:#9ca3af;">Escribinos por WhatsApp</a></p>
+          <p style="margin:0;color:#9ca3af;font-size:12px;">Soluciones MDP · <a href="https://wa.me/5492235767784" style="color:#9ca3af;">WhatsApp</a> · <a href="https://www.instagram.com/soluciones_mdp" style="color:#9ca3af;">Instagram</a> · <a href="https://www.facebook.com/share/1D7keoQJe1/" style="color:#9ca3af;">Facebook</a></p><p style="margin:4px 0 0;color:#9ca3af;font-size:11px;">Seguinos en nuestras redes para enterarte de novedades y tips</p>
         </div>
       </div>`
 
