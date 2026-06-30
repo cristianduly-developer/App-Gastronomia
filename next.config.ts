@@ -8,7 +8,7 @@ const pwaConfig = withPWA({
   skipWaiting: false, // control manual del update via banner
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
-  navigateFallbackDenylist: [/^\/ayuda/], // página estática, no interceptar con el SW
+  navigateFallbackDenylist: [/^\/ayuda/, /^\/menu\//, /^\/delivery\//], // páginas públicas, no interceptar con el SW
 })
 
 const nextConfig: NextConfig = {}
