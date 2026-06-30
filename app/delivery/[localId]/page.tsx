@@ -175,13 +175,13 @@ export default function DeliveryPublicoPage() {
               <h1 className="font-bold text-white text-lg leading-tight truncate">{configLocal?.nombre_negocio}</h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
-                <span className="text-xs text-gray-400">{tipoLabel} · Delivery 🛵</span>
+                <span className="text-xs text-gray-400">{tipoLabel} · Delivery</span>
               </div>
             </div>
             {paso === 'menu' && carrito.length > 0 && (
               <button onClick={() => setPaso('carrito')}
                 className="flex-shrink-0 bg-orange-500 hover:bg-orange-400 text-white rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5">
-                🛒 {cantTotal}
+                Carrito ({cantTotal})
               </button>
             )}
             {paso !== 'menu' && (
