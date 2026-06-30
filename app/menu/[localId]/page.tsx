@@ -184,7 +184,7 @@ export async function generateMetadata({ params }: Params) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   ).from('config_local').select('nombre_negocio, tipo_negocio').eq('local_id', localId).single()
 
-  const tipo = { food_truck: 'Food Truck', rotiseria: 'Rotisería', pizzeria: 'Pizzería', restaurante: 'Restaurante', cafeteria: 'Cafetería', otro: 'Gastronomía' }[data?.tipo_negocio ?? ''] ?? 'Gastronomía'
+  const tipo = TIPO_LABELS[data?.tipo_negocio ?? ''] ?? 'Gastronomía'
 
   return {
     title: data?.nombre_negocio ? `${data.nombre_negocio} — Carta` : 'Carta digital',
