@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useMemo } from 'react'
+import { useParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseAnon = createClient(
@@ -22,8 +23,10 @@ const TIPO_LABELS: Record<string, string> = {
   restaurante: 'Restaurante', cafeteria: 'Cafetería', otro: 'Gastronomía',
 }
 
-export default function MenuMesaPage({ params }: { params: { localId: string; mesaId: string } }) {
-  const { localId, mesaId } = params
+export default function MenuMesaPage() {
+  const params = useParams()
+  const localId = params.localId as string
+  const mesaId = params.mesaId as string
 
   const [config, setConfig] = useState<Config | null>(null)
   const [mesaNombre, setMesaNombre] = useState('')
