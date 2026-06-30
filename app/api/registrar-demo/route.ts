@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const DEMO_DIAS = 28
+const DEMO_DIAS = parseInt(process.env.DEMO_DIAS || '28', 10)
 const APP_ID    = 'app-gastronomia'
 const OWNER_ID  = process.env.DEMO_OWNER_ID ?? 'd8eef2e2-7e07-4ec9-9c6e-766addf89cc5'
 
