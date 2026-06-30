@@ -99,7 +99,7 @@ export default function MenuMesaPage() {
     if (cart.length === 0 || !config) return
     setEnviando(true)
     const items = cart.map((i) => ({
-      productoId: i.productoId, nombre: i.nombre, precio: i.precio,
+      producto_id: i.productoId, nombre: i.nombre, precio: i.precio,
       cantidad: i.cantidad, subtotal: i.precio * i.cantidad, observacion: i.observacion || null,
     }))
     const res = await fetch('/api/public/qr-pedido', {
