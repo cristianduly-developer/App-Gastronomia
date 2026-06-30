@@ -38,6 +38,10 @@ export default function MenuMesaPage({ params }: { params: { localId: string; me
   const [enviando, setEnviando] = useState(false)
   const [modalObs, setModalObs] = useState<{ idx: number; valor: string } | null>(null)
 
+  const fetchProductos = () =>
+    supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre')
+      .then(({ data: prods }) => { if (prods) setProductos(prods) })
+
   useEffect(() => {
     Promise.all([
       supabaseAnon.from('config_local').select('nombre_negocio, telefono, usa_qr_pedidos, logo_url, tipo_negocio').eq('local_id', localId).single(),
@@ -52,6 +56,9 @@ export default function MenuMesaPage({ params }: { params: { localId: string; me
       setProductos(prods ?? [])
       setLoading(false)
     })
+
+    const interval = setInterval(fetchProductos, 60_000)
+    return () => clearInterval(interval)
   }, [localId, mesaId])
 
   const prodsFiltrados = useMemo(() => {

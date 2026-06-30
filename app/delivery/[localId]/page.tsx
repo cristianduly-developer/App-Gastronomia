@@ -8,7 +8,7 @@ const supabaseAnon = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-interface Producto { id: string; nombre: string; precio: number; categoria_id: string; descripcion: string | null; imagen_url: string | null }
+interface Producto { id: string; nombre: string; precio: number; categoria_id: string; descripcion: string | null; imagen_url: string | null; agotado: boolean }
 interface Categoria { id: string; nombre: string; orden: number }
 interface ConfigLocal { nombre_negocio: string; logo_url: string | null; telefono: string | null; tipo_negocio: string }
 interface ItemCarrito { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string }
@@ -38,18 +38,25 @@ export default function DeliveryPublicoPage() {
   const [obsModal, setObsModal] = useState<string | null>(null)
   const [obsTemp, setObsTemp] = useState('')
 
+  const fetchProductos = () =>
+    supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion, imagen_url, agotado').eq('local_id', localId).eq('activo', true).order('nombre')
+      .then(({ data: prods }) => { if (prods) setProductos(prods) })
+
   useEffect(() => {
     if (!localId) return
     Promise.all([
       supabaseAnon.from('config_local').select('nombre_negocio, logo_url, telefono, tipo_negocio').eq('local_id', localId).single(),
       supabaseAnon.from('categorias').select('id, nombre, orden').eq('local_id', localId).eq('activo', true).order('orden'),
-      supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre'),
+      supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion, imagen_url, agotado').eq('local_id', localId).eq('activo', true).order('nombre'),
     ]).then(([{ data: cfg }, { data: cats }, { data: prods }]) => {
       setConfigLocal(cfg)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
       setLoading(false)
     })
+
+    const interval = setInterval(fetchProductos, 60_000)
+    return () => clearInterval(interval)
   }, [localId])
 
   const agregar = (p: Producto) => {
@@ -225,13 +232,18 @@ export default function DeliveryPublicoPage() {
           {prodsMostrados.map((p) => {
             const item = carrito.find((i) => i.producto_id === p.id)
             return (
-              <div key={p.id} className="flex gap-3 bg-[#181818] border border-[#252525] rounded-2xl overflow-hidden">
+              <div key={p.id} className={`flex gap-3 bg-[#181818] border border-[#252525] rounded-2xl overflow-hidden ${p.agotado ? 'opacity-50' : ''}`}>
                 <div className="relative w-[90px] flex-shrink-0 bg-[#252525] min-h-[90px]">
                   {p.imagen_url
                     /* eslint-disable-next-line @next/next/no-img-element */
                     ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover absolute inset-0" />
                     : <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">🍽️</div>
                   }
+                  {p.agotado && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-red-300 bg-red-950/80 border border-red-800 px-2 py-0.5 rounded-md">AGOTADO</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
                   <div>
@@ -240,7 +252,7 @@ export default function DeliveryPublicoPage() {
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-base font-bold text-orange-500">${p.precio.toLocaleString()}</p>
-                    {item ? (
+                    {!p.agotado && (item ? (
                       <div className="flex items-center gap-2">
                         <button onClick={() => quitar(p.id)}
                           className="w-7 h-7 rounded-lg bg-[#252525] hover:bg-[#333] text-white flex items-center justify-center text-base font-bold transition">−</button>
@@ -253,7 +265,7 @@ export default function DeliveryPublicoPage() {
                         className="bg-orange-500 hover:bg-orange-400 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition">
                         + Agregar
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
