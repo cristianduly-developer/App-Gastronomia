@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
 import { PlanGuard } from '@/components/PlanGuard'
@@ -38,6 +38,10 @@ export default function PedidosQRPage() {
   const [pedidos, setPedidos] = useState<PedidoQR[]>([])
   const [loading, setLoading] = useState(true)
   const [procesando, setProcesando] = useState<Set<string>>(new Set())
+  const [autoAceptar, setAutoAceptar] = useState(false)
+  const autoAceptarRef = useRef(false)
+
+  useEffect(() => { autoAceptarRef.current = autoAceptar }, [autoAceptar])
 
   const cargar = useCallback(async () => {
     const { data } = await supabaseApp
@@ -52,11 +56,20 @@ export default function PedidosQRPage() {
 
   useEffect(() => {
     if (!localId) return
+    supabaseApp.from('config_local').select('qr_auto_aceptar').eq('local_id', localId).single()
+      .then(({ data }) => { if (data) setAutoAceptar(data.qr_auto_aceptar ?? false) })
     cargar()
 
     const channel = supabaseApp
       .channel('pedidos-qr-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_qr', filter: `local_id=eq.${localId}` }, cargar)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos_qr', filter: `local_id=eq.${localId}` }, (payload) => {
+        if (autoAceptarRef.current) {
+          aceptar(payload.new as PedidoQR)
+        } else {
+          cargar()
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos_qr', filter: `local_id=eq.${localId}` }, cargar)
       .subscribe()
 
     return () => { supabaseApp.removeChannel(channel) }

@@ -10,7 +10,7 @@ const supabaseAnon = createClient(
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string; descripcion: string | null; imagen_url: string | null; agotado: boolean }
 interface Categoria { id: string; nombre: string; orden: number }
-interface ConfigLocal { nombre_negocio: string; logo_url: string | null; telefono: string | null; tipo_negocio: string }
+interface ConfigLocal { nombre_negocio: string; logo_url: string | null; telefono: string | null; tipo_negocio: string; tiempo_entrega_estimado: string | null }
 interface ItemCarrito { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string }
 
 type Paso = 'menu' | 'carrito' | 'datos' | 'confirmado'
@@ -45,7 +45,7 @@ export default function DeliveryPublicoPage() {
   useEffect(() => {
     if (!localId) return
     Promise.all([
-      supabaseAnon.from('config_local').select('nombre_negocio, logo_url, telefono, tipo_negocio').eq('local_id', localId).single(),
+      supabaseAnon.from('config_local').select('nombre_negocio, logo_url, telefono, tipo_negocio, tiempo_entrega_estimado').eq('local_id', localId).single(),
       supabaseAnon.from('categorias').select('id, nombre, orden').eq('local_id', localId).eq('activo', true).order('orden'),
       supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion, imagen_url, agotado').eq('local_id', localId).eq('activo', true).order('nombre'),
     ]).then(([{ data: cfg }, { data: cats }, { data: prods }]) => {
@@ -176,6 +176,9 @@ export default function DeliveryPublicoPage() {
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                 <span className="text-xs text-gray-400">{tipoLabel} · Delivery</span>
+                {configLocal?.tiempo_entrega_estimado && (
+                  <span className="text-xs text-orange-400 font-medium">⏱ {configLocal.tiempo_entrega_estimado}</span>
+                )}
               </div>
             </div>
             {paso === 'menu' && carrito.length > 0 && (

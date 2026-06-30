@@ -222,6 +222,15 @@ export default function MenuMesaPage() {
       {/* MENÚ */}
       {paso === 'menu' && (
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-5 space-y-8 pb-32">
+          {config.usa_qr_pedidos && (
+            <div className="flex items-center gap-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl px-4 py-3">
+              <span className="text-xl">⚡</span>
+              <div>
+                <p className="text-sm font-semibold text-orange-400">Pedí desde acá</p>
+                <p className="text-xs text-gray-400 mt-0.5">Tu pedido llega directo a cocina</p>
+              </div>
+            </div>
+          )}
           {tabActivo === 'todos' ? (
             categorias.map((cat) => {
               const prodsCat = prodsFiltrados.filter((p) => p.categoria_id === cat.id)

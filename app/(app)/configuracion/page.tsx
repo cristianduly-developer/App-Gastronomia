@@ -15,6 +15,8 @@ interface Config {
   usa_cocina: boolean
   usa_qr: boolean
   usa_qr_pedidos: boolean
+  qr_auto_aceptar: boolean
+  tiempo_entrega_estimado: string
   logo_url: string
 }
 
@@ -60,9 +62,11 @@ export default function ConfiguracionPage() {
             usa_mesas:       data.usa_mesas ?? false,
             usa_delivery:    data.usa_delivery ?? false,
             usa_cocina:      data.usa_cocina ?? false,
-            usa_qr:          data.usa_qr ?? false,
-            usa_qr_pedidos:  data.usa_qr_pedidos ?? false,
-            logo_url:        data.logo_url ?? '',
+            usa_qr:                  data.usa_qr ?? false,
+            usa_qr_pedidos:          data.usa_qr_pedidos ?? false,
+            qr_auto_aceptar:         data.qr_auto_aceptar ?? false,
+            tiempo_entrega_estimado: data.tiempo_entrega_estimado ?? '',
+            logo_url:                data.logo_url ?? '',
           }
           setConfig(c)
           setForm(c)
@@ -80,9 +84,11 @@ export default function ConfiguracionPage() {
       usa_mesas:      form.usa_mesas,
       usa_delivery:   form.usa_delivery,
       usa_cocina:      form.usa_cocina,
-      usa_qr:          form.usa_qr,
-      usa_qr_pedidos:  form.usa_qr_pedidos,
-      logo_url:        form.logo_url,
+      usa_qr:                  form.usa_qr,
+      usa_qr_pedidos:          form.usa_qr_pedidos,
+      qr_auto_aceptar:         form.qr_auto_aceptar,
+      tiempo_entrega_estimado: form.tiempo_entrega_estimado || null,
+      logo_url:                form.logo_url,
     }).eq('local_id', localId)
     setConfig(form)
     setSession({
@@ -284,7 +290,17 @@ export default function ConfiguracionPage() {
         {/* Link delivery */}
         {form.usa_delivery && (
           <section className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
-            <h2 className="font-semibold text-white">Link de delivery</h2>
+            <h2 className="font-semibold text-white">Delivery</h2>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Tiempo estimado de entrega (opcional)</label>
+              <input
+                value={form.tiempo_entrega_estimado}
+                onChange={(e) => setForm((f) => f ? { ...f, tiempo_entrega_estimado: e.target.value } : f)}
+                placeholder="Ej: 30-45 min"
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
+              />
+              <p className="text-xs text-gray-600 mt-1">Se muestra a los clientes en la página de delivery</p>
+            </div>
             <p className="text-xs text-gray-400">
               Compartí este link o generá un QR para que tus clientes hagan pedidos a domicilio.
             </p>
@@ -400,7 +416,7 @@ export default function ConfiguracionPage() {
             </div>
 
             {form.usa_qr_pedidos && (
-              <div className="border-t border-gray-800 pt-4">
+              <div className="border-t border-gray-800 pt-4 space-y-3">
                 <p className="text-xs text-gray-400 mb-1">
                   Los QR por mesa incluyen la mesa en el link. Generalos desde{' '}
                   <a href="/mesas/configurar" className="text-violet-400 hover:text-violet-300 transition">Configurar mesas ↗</a>
@@ -408,6 +424,21 @@ export default function ConfiguracionPage() {
                 <p className="text-xs text-gray-500">
                   Formato: <code className="text-gray-400">/menu/{'{localId}'}/mesa/{'{mesaId}'}</code>
                 </p>
+                <button
+                  onClick={() => toggle('qr_auto_aceptar')}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
+                    ${form.qr_auto_aceptar ? 'bg-violet-950 border-violet-600' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
+                >
+                  <span className="text-2xl">⚡</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">Auto-aceptar pedidos QR</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Los pedidos van directo a cocina sin que el mozo confirme</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                    ${form.qr_auto_aceptar ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
+                    {form.qr_auto_aceptar && <span className="text-white text-xs">✓</span>}
+                  </div>
+                </button>
               </div>
             )}
           </section>
