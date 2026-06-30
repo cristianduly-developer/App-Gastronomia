@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       pedido_delivery_id: pedido.id,
       producto_id: i.producto_id,
       nombre: i.nombre,
+      precio: precioMap[i.producto_id] ?? 0,
       precio_unitario: precioMap[i.producto_id] ?? 0,
       cantidad: i.cantidad,
       subtotal: (precioMap[i.producto_id] ?? 0) * i.cantidad,
