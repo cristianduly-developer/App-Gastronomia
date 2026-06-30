@@ -63,6 +63,8 @@ export default function DeliveryPage() {
   const [loading, setLoading] = useState(true)
   const [expandido, setExpandido] = useState<string | null>(null)
   const [avanzando, setAvanzando] = useState<Set<string>>(new Set())
+  const [modalCobro, setModalCobro] = useState<PedidoDelivery | null>(null)
+  const [metodoCobro, setMetodoCobro] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
 
   // Modal nuevo pedido manual
   const [modalNuevo, setModalNuevo] = useState(false)
@@ -102,9 +104,32 @@ export default function DeliveryPage() {
   const avanzar = async (pedido: PedidoDelivery) => {
     const sig = SIGUIENTE[pedido.estado as EstadoKey]
     if (!sig) return
+    if (sig === 'entregado') {
+      setMetodoCobro(pedido.metodo_pago as typeof metodoCobro ?? 'efectivo')
+      setModalCobro(pedido)
+      return
+    }
     setAvanzando((s) => new Set(s).add(pedido.id))
     await supabaseApp.from('pedidos_delivery').update({ estado: sig }).eq('id', pedido.id)
     setAvanzando((s) => { const n = new Set(s); n.delete(pedido.id); return n })
+    cargar()
+  }
+
+  const confirmarCobro = async () => {
+    if (!modalCobro) return
+    setAvanzando((s) => new Set(s).add(modalCobro.id))
+    await Promise.all([
+      supabaseApp.from('pedidos_delivery').update({ estado: 'entregado', metodo_pago: metodoCobro }).eq('id', modalCobro.id),
+      supabaseApp.from('ventas').insert({
+        local_id: localId,
+        total: modalCobro.total,
+        metodo_pago: metodoCobro,
+        origen: 'delivery',
+        referencia_id: modalCobro.id,
+      }),
+    ])
+    setAvanzando((s) => { const n = new Set(s); n.delete(modalCobro.id); return n })
+    setModalCobro(null)
     cargar()
   }
 
@@ -558,6 +583,36 @@ export default function DeliveryPage() {
                 className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-semibold rounded-xl py-3 text-sm transition"
               >
                 {guardando ? 'Guardando...' : `Crear pedido · $${totalPedido.toLocaleString()}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal cobro delivery */}
+      {modalCobro && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4">
+            <div>
+              <h3 className="text-lg font-bold text-white">Cobrar pedido</h3>
+              <p className="text-sm text-gray-400 mt-0.5">{modalCobro.cliente_nombre} · ${modalCobro.total.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 mb-2">Método de pago</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['efectivo', 'transferencia', 'debito', 'credito'] as const).map((m) => (
+                  <button key={m} onClick={() => setMetodoCobro(m)}
+                    className={`py-3 rounded-xl text-sm font-medium transition border ${metodoCobro === m ? 'bg-violet-600 border-violet-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}>
+                    {{ efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Debito', credito: 'Credito' }[m]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setModalCobro(null)} className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition">
+                Cancelar
+              </button>
+              <button onClick={confirmarCobro} className="flex-1 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl py-3 text-sm transition">
+                Confirmar cobro
               </button>
             </div>
           </div>
