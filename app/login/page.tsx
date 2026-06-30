@@ -8,8 +8,10 @@ import { type Plan } from '@/lib/planLimits'
 
 const PLAN_MAP: Record<string, Plan> = {
   basico: 'basico',
-  profesional: 'premium',
+  profesional: 'profesional',
   premium: 'premium',
+  sincargo: 'profesional', // sin cargo tiene acceso profesional
+  demo: 'profesional',     // demo tiene acceso profesional
 }
 
 const WA_LINK = 'https://wa.me/5492235767784'
