@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -124,15 +125,18 @@ export default function NuevaComandaPage() {
   if (loading) {
     return (
       <RouteGuard permiso="crearComandas">
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <PlanGuard feature="usaMesas">
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </PlanGuard>
       </RouteGuard>
     )
   }
 
   return (
     <RouteGuard permiso="crearComandas">
+      <PlanGuard feature="usaMesas">
       {/* ── VISTA CARRITO (mobile paso 2 / siempre visible en desktop como panel lateral) ── */}
       {vistaCarrito ? (
         <div className="max-w-lg mx-auto flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
@@ -315,6 +319,7 @@ export default function NuevaComandaPage() {
           </div>
         </div>
       )}
+      </PlanGuard>
     </RouteGuard>
   )
 }

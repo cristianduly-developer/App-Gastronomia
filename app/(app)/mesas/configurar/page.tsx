@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -130,6 +131,7 @@ export default function ConfigurarMesasPage() {
 
   return (
     <RouteGuard permiso="verConfig">
+    <PlanGuard feature="usaMesas">
       <div className="max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => router.back()} className="text-gray-400 hover:text-white transition">← Volver</button>
@@ -295,6 +297,7 @@ export default function ConfigurarMesasPage() {
           </div>
         </div>
       )}
+    </PlanGuard>
     </RouteGuard>
   )
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
+import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
@@ -192,9 +193,11 @@ export default function MesaDetallePage() {
   if (loading) {
     return (
       <RouteGuard permiso="verMesas">
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <PlanGuard feature="usaMesas">
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </PlanGuard>
       </RouteGuard>
     )
   }
@@ -202,7 +205,9 @@ export default function MesaDetallePage() {
   if (!mesa) {
     return (
       <RouteGuard permiso="verMesas">
-        <p className="text-gray-400">Mesa no encontrada</p>
+        <PlanGuard feature="usaMesas">
+          <p className="text-gray-400">Mesa no encontrada</p>
+        </PlanGuard>
       </RouteGuard>
     )
   }
@@ -217,6 +222,7 @@ export default function MesaDetallePage() {
 
   return (
     <RouteGuard permiso="verMesas">
+      <PlanGuard feature="usaMesas">
       <div className="max-w-xl">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -373,6 +379,7 @@ export default function MesaDetallePage() {
           </div>
         </div>
       )}
+      </PlanGuard>
     </RouteGuard>
   )
 }

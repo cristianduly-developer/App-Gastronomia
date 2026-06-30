@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { usePlan } from '@/hooks/usePlan'
 
 interface Config {
   nombre_negocio: string
@@ -29,6 +30,7 @@ const TIPO_LABELS: Record<string, string> = {
 export default function ConfiguracionPage() {
   const { localId, setSession } = useSession()
   const router = useRouter()
+  const limites = usePlan()
   const [config, setConfig] = useState<Config | null>(null)
   const [form, setForm] = useState<Config | null>(null)
   const [guardando, setGuardando] = useState(false)
@@ -232,31 +234,51 @@ export default function ConfiguracionPage() {
         <section className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
           <h2 className="font-semibold text-white mb-1">Funciones activas</h2>
           {([
-            { key: 'usa_mesas',    emoji: '🪑', label: 'Mesas / comedor',   desc: 'Gestión visual de salón y comandas' },
-            { key: 'usa_delivery', emoji: '🛵', label: 'Delivery',           desc: 'Pedidos para envío a domicilio' },
-            { key: 'usa_cocina',   emoji: '👨‍🍳', label: 'Monitor de cocina', desc: 'Pantalla en cocina con pedidos en tiempo real' },
-            { key: 'usa_qr',         emoji: '📱', label: 'Menú QR',                desc: 'Los clientes ven la carta desde su celu' },
-            { key: 'usa_qr_pedidos', emoji: '🛒', label: 'Pedidos desde el QR',    desc: 'Los clientes pueden pedir desde la carta, el mozo confirma' },
-          ] as const).map(({ key, emoji, label, desc }) => (
-            <button
-              key={key}
-              onClick={() => toggle(key as keyof Config)}
-              className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
-                ${form[key as keyof Config]
-                  ? 'bg-violet-950 border-violet-600'
-                  : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
-            >
-              <span className="text-2xl">{emoji}</span>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white">{label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-                ${form[key as keyof Config] ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
-                {form[key as keyof Config] && <span className="text-white text-xs">✓</span>}
-              </div>
-            </button>
-          ))}
+            { key: 'usa_mesas',      planKey: 'usaMesas',    emoji: '🪑', label: 'Mesas / comedor',        desc: 'Gestión visual de salón y comandas' },
+            { key: 'usa_delivery',   planKey: 'usaDelivery', emoji: '🛵', label: 'Delivery',               desc: 'Pedidos para envío a domicilio' },
+            { key: 'usa_cocina',     planKey: 'usaCocina',   emoji: '👨‍🍳', label: 'Monitor de cocina',      desc: 'Pantalla en cocina con pedidos en tiempo real' },
+            { key: 'usa_qr',         planKey: null,          emoji: '📱', label: 'Menú QR',                desc: 'Los clientes ven la carta desde su celu' },
+            { key: 'usa_qr_pedidos', planKey: 'usaQrPedido', emoji: '🛒', label: 'Pedidos desde el QR',   desc: 'Los clientes pueden pedir desde la carta, el mozo confirma' },
+          ] as const).map(({ key, planKey, emoji, label, desc }) => {
+            const bloqueado = planKey !== null && !limites[planKey as keyof typeof limites]
+            if (bloqueado) {
+              return (
+                <div
+                  key={key}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border text-left bg-gray-800/50 border-gray-700/50 opacity-60 cursor-not-allowed select-none"
+                >
+                  <span className="text-2xl">{emoji}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">{label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                  </div>
+                  <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg px-2.5 py-1 font-semibold flex-shrink-0">
+                    Plan superior
+                  </span>
+                </div>
+              )
+            }
+            return (
+              <button
+                key={key}
+                onClick={() => toggle(key as keyof Config)}
+                className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
+                  ${form[key as keyof Config]
+                    ? 'bg-violet-950 border-violet-600'
+                    : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
+              >
+                <span className="text-2xl">{emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">{label}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                  ${form[key as keyof Config] ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
+                  {form[key as keyof Config] && <span className="text-white text-xs">✓</span>}
+                </div>
+              </button>
+            )
+          })}
         </section>
 
         {/* Link delivery */}
