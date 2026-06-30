@@ -7,7 +7,7 @@ import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 
 interface ItemQR {
-  productoId: string
+  producto_id: string
   nombre: string
   precio: number
   cantidad: number
@@ -97,7 +97,7 @@ export default function PedidosQRPage() {
     // 2. Insertar items en comanda
     const items = pedido.items.map((i) => ({
       comanda_id: comandaId,
-      producto_id: i.productoId,
+      producto_id: i.producto_id,
       nombre: i.nombre,
       precio: i.precio,
       cantidad: i.cantidad,
