@@ -1,7 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { supabaseApp } from '@/lib/supabaseApp'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAnon = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string; descripcion: string | null }
 interface Categoria { id: string; nombre: string; orden: number }
@@ -34,9 +39,9 @@ export default function DeliveryPublicoPage() {
   useEffect(() => {
     if (!localId) return
     Promise.all([
-      supabaseApp.from('config_local').select('nombre_negocio, logo_url').eq('local_id', localId).single(),
-      supabaseApp.from('categorias').select('id, nombre, orden').eq('local_id', localId).eq('activo', true).order('orden'),
-      supabaseApp.from('productos').select('id, nombre, precio, categoria_id, descripcion').eq('local_id', localId).eq('activo', true).order('nombre'),
+      supabaseAnon.from('config_local').select('nombre_negocio, logo_url').eq('local_id', localId).single(),
+      supabaseAnon.from('categorias').select('id, nombre, orden').eq('local_id', localId).eq('activo', true).order('orden'),
+      supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion').eq('local_id', localId).eq('activo', true).order('nombre'),
     ]).then(([{ data: cfg }, { data: cats }, { data: prods }]) => {
       setConfigLocal(cfg)
       setCategorias(cats ?? [])
