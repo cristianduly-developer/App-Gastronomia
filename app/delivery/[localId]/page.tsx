@@ -308,7 +308,7 @@ export default function DeliveryPublicoPage() {
                 <div className="flex items-center gap-2">
                   <button onClick={() => quitar(i.producto_id)} className="w-8 h-8 bg-[#252525] hover:bg-[#333] text-white rounded-xl font-bold transition">−</button>
                   <span className="text-sm font-bold text-white w-5 text-center">{i.cantidad}</span>
-                  <button onClick={() => agregar({ id: i.producto_id, nombre: i.nombre, precio: i.precio, categoria_id: '', descripcion: null, imagen_url: null })}
+                  <button onClick={() => agregar({ id: i.producto_id, nombre: i.nombre, precio: i.precio, categoria_id: '', descripcion: null, imagen_url: null, agotado: false })}
                     className="w-8 h-8 bg-orange-500 hover:bg-orange-400 text-white rounded-xl font-bold transition">+</button>
                 </div>
               </div>
