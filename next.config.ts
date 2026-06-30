@@ -5,10 +5,17 @@ import withPWA from 'next-pwa'
 const pwaConfig = withPWA({
   dest: 'public',
   register: true,
-  skipWaiting: false, // control manual del update via banner
+  skipWaiting: true, // fuerza instalación inmediata del SW corregido
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
-  navigateFallbackDenylist: [/^\/ayuda/, /^\/menu\//, /^\/delivery\//], // páginas públicas, no interceptar con el SW
+  navigateFallbackDenylist: [/^\/ayuda/, /^\/menu\//, /^\/delivery\//],
+  runtimeCaching: [
+    {
+      // Páginas públicas: siempre red, nunca cache — para que el SW no interfiera
+      urlPattern: /\/(menu|delivery)\//,
+      handler: 'NetworkOnly',
+    },
+  ],
 })
 
 const nextConfig: NextConfig = {}
