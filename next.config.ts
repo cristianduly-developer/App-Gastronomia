@@ -8,11 +8,11 @@ const pwaConfig = withPWA({
   skipWaiting: true, // fuerza instalación inmediata del SW corregido
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
-  navigateFallbackDenylist: [/^\/ayuda/, /^\/menu\//, /^\/delivery\//],
+  navigateFallbackDenylist: [/^\/ayuda/, /^\/menu/, /^\/delivery/],
   runtimeCaching: [
     {
       // Páginas públicas: siempre red, nunca cache — para que el SW no interfiera
-      urlPattern: /\/(menu|delivery)\//,
+      urlPattern: /\/(menu|delivery)(\/|$)/,
       handler: 'NetworkOnly',
     },
   ],
