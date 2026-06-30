@@ -97,9 +97,11 @@ export default function PedidosQRPage() {
     // 2. Insertar items en comanda
     const items = pedido.items.map((i) => ({
       comanda_id: comandaId,
+      local_id: localId,
       producto_id: i.producto_id,
       nombre: i.nombre,
       precio: i.precio,
+      precio_unitario: i.precio,
       cantidad: i.cantidad,
       subtotal: i.subtotal,
       observacion: i.observacion,
