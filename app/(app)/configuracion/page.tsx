@@ -332,6 +332,51 @@ export default function ConfiguracionPage() {
               </a>
             </div>
 
+            {/* QR imprimible */}
+            <div className="border-t border-gray-800 pt-4 flex items-start gap-5">
+              <div className="bg-white rounded-xl p-2 flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(menuUrl)}`}
+                  alt="QR menú"
+                  width={120}
+                  height={120}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Imprimí este QR y pegalo en las mesas. Los clientes escanean y ven la carta.
+                </p>
+                <button
+                  onClick={() => {
+                    const ventana = window.open('', '_blank')
+                    if (!ventana) return
+                    ventana.document.write(`
+                      <html><head><title>QR Menú — ${form.nombre_negocio || 'Mi local'}</title>
+                      <style>
+                        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; background: #fff; }
+                        h1 { font-size: 26px; margin-bottom: 6px; }
+                        p { color: #666; font-size: 14px; margin-bottom: 24px; }
+                        img { width: 300px; height: 300px; }
+                        @media print { button { display: none; } }
+                      </style></head>
+                      <body>
+                        <h1>🍽️ ${form.nombre_negocio || 'Menú'}</h1>
+                        <p>Escaneá para ver nuestra carta</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(menuUrl)}" />
+                        <br/><br/>
+                        <button onclick="window.print()" style="padding:12px 24px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer">Imprimir</button>
+                      </body></html>
+                    `)
+                    ventana.document.close()
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-xl transition self-start"
+                >
+                  🖨️ Imprimir QR
+                </button>
+              </div>
+            </div>
+
             {form.usa_qr_pedidos && (
               <div className="border-t border-gray-800 pt-4">
                 <p className="text-xs text-gray-400 mb-1">
