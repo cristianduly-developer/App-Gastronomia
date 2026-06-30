@@ -84,7 +84,10 @@ export function useSessionGuard() {
     const { data: { subscription } } = supabaseApp.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearSession()
-        router.push('/login')
+        const path = window.location.pathname
+        if (!path.startsWith('/menu') && !path.startsWith('/delivery') && !path.startsWith('/ayuda')) {
+          router.push('/login')
+        }
       }
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         syncSession()
