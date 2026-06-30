@@ -122,16 +122,8 @@ export async function POST(req: NextRequest) {
   if (acceso && acceso.tiene_acceso) {
     const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } })
     const orgId = acceso.ret_org_id ?? (acceso as any).org_id
-    const { data: subRow } = await central
-      .from('suscripciones_apps')
-      .select('cant_sesiones')
-      .eq('org_id', orgId)
-      .eq('app_id', 'app-gastronomia')
-      .maybeSingle()
-    central.from('suscripciones_apps').update({
-      ultimo_acceso: new Date().toISOString(),
-      cant_sesiones: (subRow?.cant_sesiones ?? 0) + 1,
-    }).eq('org_id', orgId).eq('app_id', 'app-gastronomia').then(() => {})
+    central.rpc('incrementar_sesion', { p_org_id: orgId, p_app_id: 'app-gastronomia' })
+      .then(({ error }) => { if (error) console.error('[verificar-acceso POST] incrementar_sesion error:', error) })
     return NextResponse.json({ esColab: false, acceso })
   }
 
