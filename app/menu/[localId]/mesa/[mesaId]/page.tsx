@@ -13,8 +13,13 @@ interface Producto {
   id: string; nombre: string; descripcion: string | null
   precio: number; categoria_id: string | null; agotado: boolean; imagen_url: string | null
 }
+interface ComboItemDB { producto_id: string; cantidad: number; productos: { nombre: string } | null }
+interface Combo {
+  id: string; nombre: string; descripcion: string | null; precio: number; imagen_url: string | null
+  combo_items: ComboItemDB[]
+}
 interface Config { nombre_negocio: string; telefono: string | null; usa_qr_pedidos: boolean; logo_url: string | null; tipo_negocio: string }
-interface CartItem { productoId: string; nombre: string; precio: number; cantidad: number; observacion: string }
+interface CartItem { productoId: string; nombre: string; precio: number; cantidad: number; observacion: string; tipo?: 'producto' | 'combo' }
 
 type Paso = 'menu' | 'carrito' | 'confirmado'
 
@@ -32,6 +37,7 @@ export default function MenuMesaPage() {
   const [mesaNombre, setMesaNombre] = useState('')
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
+  const [combos, setCombos] = useState<Combo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -51,12 +57,14 @@ export default function MenuMesaPage() {
       supabaseAnon.from('mesas').select('nombre').eq('id', mesaId).single(),
       supabaseAnon.from('categorias').select('*').eq('local_id', localId).eq('activo', true).order('nombre'),
       supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre'),
-    ]).then(([{ data: cfg }, { data: mesa }, { data: cats }, { data: prods }]) => {
+      supabaseAnon.from('combos').select('id, nombre, descripcion, precio, imagen_url, combo_items(producto_id, cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).order('nombre'),
+    ]).then(([{ data: cfg }, { data: mesa }, { data: cats }, { data: prods }, { data: combosData }]) => {
       if (!cfg || !mesa) { setError('Menú no encontrado'); setLoading(false); return }
       setConfig(cfg)
       setMesaNombre(mesa.nombre)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
+      setCombos((combosData ?? []) as Combo[])
       setLoading(false)
     })
 
@@ -72,13 +80,25 @@ export default function MenuMesaPage() {
   const agregarAlCart = (prod: Producto) => {
     if (prod.agotado) return
     setCart((prev) => {
-      const idx = prev.findIndex((i) => i.productoId === prod.id)
+      const idx = prev.findIndex((i) => i.productoId === prod.id && i.tipo !== 'combo')
       if (idx >= 0) {
         const next = [...prev]
         next[idx] = { ...next[idx], cantidad: next[idx].cantidad + 1 }
         return next
       }
-      return [...prev, { productoId: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, observacion: '' }]
+      return [...prev, { productoId: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, observacion: '', tipo: 'producto' }]
+    })
+  }
+
+  const agregarComboAlCart = (combo: Combo) => {
+    setCart((prev) => {
+      const idx = prev.findIndex((i) => i.productoId === combo.id && i.tipo === 'combo')
+      if (idx >= 0) {
+        const next = [...prev]
+        next[idx] = { ...next[idx], cantidad: next[idx].cantidad + 1 }
+        return next
+      }
+      return [...prev, { productoId: combo.id, nombre: combo.nombre, precio: combo.precio, cantidad: 1, observacion: '', tipo: 'combo' }]
     })
   }
 
@@ -101,6 +121,7 @@ export default function MenuMesaPage() {
     const items = cart.map((i) => ({
       producto_id: i.productoId, nombre: i.nombre, precio: i.precio,
       cantidad: i.cantidad, subtotal: i.precio * i.cantidad, observacion: i.observacion || null,
+      tipo: i.tipo ?? 'producto',
     }))
     const res = await fetch('/api/public/qr-pedido', {
       method: 'POST',
@@ -231,6 +252,56 @@ export default function MenuMesaPage() {
               </div>
             </div>
           )}
+          {tabActivo === 'todos' && combos.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Combos y Promos</h2>
+              <div className="space-y-3">
+                {combos.map((combo) => {
+                  const enCart = cart.find((i) => i.productoId === combo.id && i.tipo === 'combo')
+                  const partes = combo.combo_items.map((ci) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean).join(' + ')
+                  return (
+                    <div key={combo.id} className="flex gap-3 bg-[#181818] border border-orange-900/40 rounded-2xl overflow-hidden">
+                      <div className="relative w-[90px] flex-shrink-0 bg-[#252525] min-h-[90px]">
+                        {combo.imagen_url
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          ? <img src={combo.imagen_url} alt={combo.nombre} className="w-full h-full object-cover absolute inset-0" />
+                          : <div className="w-full h-full flex items-center justify-center text-3xl opacity-30">🎁</div>
+                        }
+                        <div className="absolute top-1.5 left-1.5 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">COMBO</div>
+                      </div>
+                      <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-white leading-tight">{combo.nombre}</p>
+                          {partes && <p className="text-xs text-orange-400/70 mt-0.5 leading-snug">{partes}</p>}
+                          {combo.descripcion && <p className="text-xs text-[#777] mt-0.5 leading-snug">{combo.descripcion}</p>}
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-base font-bold text-orange-500">${combo.precio.toLocaleString()}</p>
+                          {config.usa_qr_pedidos && (
+                            enCart ? (
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => {
+                                  const idx = cart.findIndex((i) => i.productoId === combo.id && i.tipo === 'combo')
+                                  if (idx >= 0) cambiarCantidad(idx, -1)
+                                }} className="w-7 h-7 rounded-lg bg-[#252525] hover:bg-[#333] text-white flex items-center justify-center text-base font-bold transition">−</button>
+                                <span className="text-sm font-bold text-white w-4 text-center">{enCart.cantidad}</span>
+                                <button onClick={() => agregarComboAlCart(combo)} className="w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-400 text-white flex items-center justify-center text-base font-bold transition">+</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => agregarComboAlCart(combo)} className="bg-orange-500 hover:bg-orange-400 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition">
+                                + Agregar
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
           {tabActivo === 'todos' ? (
             categorias.map((cat) => {
               const prodsCat = prodsFiltrados.filter((p) => p.categoria_id === cat.id)

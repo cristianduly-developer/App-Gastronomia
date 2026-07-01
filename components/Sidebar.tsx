@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: '/cocina',        label: 'Cocina',         emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
   { href: '/delivery',      label: 'Delivery',       emoji: '🛵', permiso: 'verDelivery',      config: 'usaDelivery' },
   { href: '/productos',     label: 'Productos',      emoji: '🍔', permiso: 'verProductos',     config: null },
+  { href: '/combos',        label: 'Combos',         emoji: '🎁', permiso: 'verProductos',     config: null },
   { href: '/clientes',      label: 'Clientes',       emoji: '👥', permiso: 'verClientes',      config: null },
   { href: '/caja',          label: 'Caja',           emoji: '🧾', permiso: 'verCaja',          config: null },
   { href: '/reportes',      label: 'Reportes',       emoji: '📈', permiso: 'verReportes',      config: null },

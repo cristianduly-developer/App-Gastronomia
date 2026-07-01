@@ -8,6 +8,7 @@ export interface PlanLimits {
   usaCocina: boolean
   usaQrPedido: boolean
   usaDelivery: boolean
+  usaCombos: boolean
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -19,6 +20,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaCocina: false,
     usaQrPedido: true,
     usaDelivery: true,
+    usaCombos: false,
   },
   profesional: {
     productos: 150,
@@ -28,6 +30,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaCocina: true,
     usaQrPedido: true,
     usaDelivery: true,
+    usaCombos: true,
   },
   premium: {
     productos: null,
@@ -37,6 +40,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaCocina: true,
     usaQrPedido: true,
     usaDelivery: true,
+    usaCombos: true,
   },
   sincargo: {
     productos: null,
@@ -46,6 +50,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     usaCocina: true,
     usaQrPedido: true,
     usaDelivery: true,
+    usaCombos: true,
   },
 }
 

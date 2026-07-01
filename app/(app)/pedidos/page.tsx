@@ -13,6 +13,8 @@ interface ItemQR {
   cantidad: number
   subtotal: number
   observacion: string | null
+  tipo?: 'producto' | 'combo'
+  combo_detalle?: string | null
 }
 
 interface PedidoQR {
@@ -116,7 +118,7 @@ export default function PedidosQRPage() {
     const items = pedido.items.map((i) => ({
       comanda_id: comandaId,
       local_id: localId,
-      producto_id: i.producto_id,
+      producto_id: i.tipo === 'combo' ? null : i.producto_id,
       nombre: i.nombre,
       precio: i.precio,
       precio_unitario: i.precio,
@@ -125,6 +127,8 @@ export default function PedidosQRPage() {
       observacion: i.observacion,
       tanda,
       estado: usaCocina ? 'pendiente' : 'listo',
+      tipo: i.tipo ?? 'producto',
+      combo_detalle: i.combo_detalle ?? null,
     }))
     await supabaseApp.from('items_comanda').insert(items)
 

@@ -9,6 +9,11 @@ interface Producto {
   id: string; nombre: string; descripcion: string | null
   precio: number; categoria_id: string | null; agotado: boolean; imagen_url: string | null
 }
+interface ComboItem { producto_id: string; cantidad: number; productos: { nombre: string } | null }
+interface Combo {
+  id: string; nombre: string; descripcion: string | null; precio: number; imagen_url: string | null
+  combo_items: ComboItem[]
+}
 interface Config {
   nombre_negocio: string; tipo_negocio: string; telefono: string | null; logo_url: string | null
 }
@@ -26,10 +31,11 @@ const supabase = createClient(
 export default async function MenuPublicoPage({ params }: Params) {
   const { localId } = await params
 
-  const [{ data: config }, { data: categorias }, { data: productos }] = await Promise.all([
+  const [{ data: config }, { data: categorias }, { data: productos }, { data: combos }] = await Promise.all([
     supabase.from('config_local').select('nombre_negocio, tipo_negocio, telefono, logo_url').eq('local_id', localId).single(),
     supabase.from('categorias').select('*').eq('local_id', localId).eq('activo', true).order('nombre'),
     supabase.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre'),
+    supabase.from('combos').select('id, nombre, descripcion, precio, imagen_url, combo_items(producto_id, cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).order('nombre'),
   ])
 
   if (!config) {
@@ -42,6 +48,7 @@ export default async function MenuPublicoPage({ params }: Params) {
 
   const cats: Categoria[] = categorias ?? []
   const prods: Producto[] = productos ?? []
+  const combosActivos: Combo[] = (combos ?? []) as Combo[]
 
   const tipoLabel = TIPO_LABELS[config.tipo_negocio] ?? 'Gastronomía'
   const waLink = config.telefono ? `https://wa.me/549${config.telefono.replace(/\D/g, '')}` : null
@@ -89,12 +96,18 @@ export default async function MenuPublicoPage({ params }: Params) {
         </div>
 
         {/* Categorías */}
-        {cats.length > 0 && (
+        {(cats.length > 0 || combosActivos.length > 0) && (
           <div className="max-w-lg mx-auto px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
             <a href="#todos"
               className="px-4 py-2 rounded-xl bg-[#1e1e1e] text-gray-400 text-xs font-medium whitespace-nowrap hover:bg-orange-500 hover:text-white transition">
               Todos
             </a>
+            {combosActivos.length > 0 && (
+              <a href="#combos"
+                className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-medium whitespace-nowrap transition">
+                🎁 Combos
+              </a>
+            )}
             {cats.map((c) => (
               <a key={c.id} href={`#cat-${c.id}`}
                 className="px-4 py-2 rounded-xl bg-[#1e1e1e] text-gray-400 text-xs font-medium whitespace-nowrap hover:bg-orange-500 hover:text-white transition">
@@ -107,6 +120,16 @@ export default async function MenuPublicoPage({ params }: Params) {
 
       {/* Contenido */}
       <div className="max-w-lg mx-auto px-4 py-5 space-y-8 pb-10" id="todos">
+        {/* Combos */}
+        {combosActivos.length > 0 && (
+          <section id="combos">
+            <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Combos y Promos</h2>
+            <div className="space-y-3">
+              {combosActivos.map((combo) => <ComboCard key={combo.id} combo={combo} />)}
+            </div>
+          </section>
+        )}
+
         {cats.map((cat) => {
           const prodsCat = prods.filter((p) => p.categoria_id === cat.id)
           if (prodsCat.length === 0) return null
@@ -172,6 +195,35 @@ function CartaCard({ prod }: { prod: Producto }) {
           )}
         </div>
         <p className="text-base font-bold text-orange-500 mt-2">${prod.precio.toLocaleString()}</p>
+      </div>
+    </div>
+  )
+}
+
+function ComboCard({ combo }: { combo: Combo }) {
+  const partes = combo.combo_items.map((ci) =>
+    `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`.trim()
+  ).filter(Boolean).join(' + ')
+
+  return (
+    <div className="flex gap-3 bg-[#181818] border border-orange-900/40 rounded-2xl overflow-hidden">
+      <div className="relative w-[90px] flex-shrink-0 bg-[#252525]">
+        {combo.imagen_url
+          /* eslint-disable-next-line @next/next/no-img-element */
+          ? <img src={combo.imagen_url} alt={combo.nombre} className="w-full h-full object-cover" />
+          : <div className="w-full h-full min-h-[90px] flex items-center justify-center text-3xl opacity-30">🎁</div>
+        }
+        <div className="absolute top-1.5 left-1.5 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">COMBO</div>
+      </div>
+      <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
+        <div>
+          <p className="text-sm font-semibold text-white leading-tight">{combo.nombre}</p>
+          {combo.descripcion && (
+            <p className="text-xs text-[#777] mt-0.5 leading-snug">{combo.descripcion}</p>
+          )}
+          {partes && <p className="text-xs text-orange-400/70 mt-1 leading-snug">{partes}</p>}
+        </div>
+        <p className="text-base font-bold text-orange-500 mt-2">${combo.precio.toLocaleString()}</p>
       </div>
     </div>
   )

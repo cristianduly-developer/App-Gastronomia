@@ -46,6 +46,8 @@ interface ItemCocina {
   mesa_nombre: string
   origen: 'mesa' | 'delivery'
   pedido_delivery_id?: string
+  tipo?: 'producto' | 'combo'
+  combo_detalle?: string | null
 }
 
 const COLUMNAS = [
@@ -55,6 +57,80 @@ const COLUMNAS = [
 ] as const
 
 type EstadoColumna = typeof COLUMNAS[number]['key']
+
+function ItemCard({ item, colKey, cambiando, siguienteLabel, onAvanzar }: {
+  item: ItemCocina; colKey: EstadoColumna; cambiando: boolean
+  siguienteLabel: string; onAvanzar: () => void
+}) {
+  const [expandido, setExpandido] = useState(false)
+  const esCombo = item.tipo === 'combo'
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-2">
+      {/* Origen + tanda */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          {item.origen === 'delivery' && <span className="text-xs">🛵</span>}
+          <span className={`text-xs font-bold ${item.origen === 'delivery' ? 'text-orange-400' : 'text-violet-400'}`}>
+            {item.mesa_nombre}
+          </span>
+        </div>
+        {item.origen === 'mesa' && <span className="text-xs text-gray-600">T{item.tanda}</span>}
+      </div>
+
+      {/* Producto / Combo */}
+      <div className="flex items-start gap-2">
+        <span className="text-lg font-black text-white leading-none">{item.cantidad}×</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            {esCombo && <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">COMBO</span>}
+            <span className="text-sm font-semibold text-white leading-snug">{item.nombre}</span>
+          </div>
+          {esCombo && item.combo_detalle && (
+            <button
+              onClick={() => setExpandido((v) => !v)}
+              className="text-xs text-orange-400/70 hover:text-orange-400 mt-0.5 transition"
+            >
+              {expandido ? '▲ Ocultar detalle' : '▼ Ver contenido'}
+            </button>
+          )}
+          {esCombo && expandido && item.combo_detalle && (
+            <div className="mt-1.5 bg-gray-800/60 rounded-lg px-2 py-1.5 space-y-0.5">
+              {item.combo_detalle.split('\n').map((linea, i) => (
+                <p key={i} className="text-xs text-gray-300">{linea}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Observación */}
+      {item.observacion && (
+        <p className="text-xs text-amber-400 bg-amber-950/30 rounded-lg px-2 py-1 italic">
+          {item.observacion}
+        </p>
+      )}
+
+      {/* Tiempo + acción */}
+      <div className="flex items-center justify-between pt-1">
+        <span className={`text-xs font-medium ${colorTiempo(item.created_at)}`} suppressHydrationWarning>
+          {tiempoEspera(item.created_at)}
+        </span>
+        <button
+          onClick={onAvanzar}
+          disabled={cambiando}
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition disabled:opacity-40
+            ${colKey === 'pendiente'      ? 'bg-blue-600 hover:bg-blue-500 text-white' : ''}
+            ${colKey === 'en_preparacion' ? 'bg-green-600 hover:bg-green-500 text-white' : ''}
+            ${colKey === 'listo'          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : ''}
+          `}
+        >
+          {cambiando ? '...' : siguienteLabel}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function tiempoEspera(created_at: string) {
   const mins = Math.floor((Date.now() - new Date(created_at).getTime()) / 60000)
@@ -82,7 +158,7 @@ export default function CocinaPage() {
     const [{ data: itemsMesa }, { data: itemsDelivery }] = await Promise.all([
       supabaseApp
         .from('items_comanda')
-        .select(`id, nombre, cantidad, observacion, estado, tanda, created_at, comanda_id, comandas!inner ( mesa_id, mesas!inner ( nombre ) )`)
+        .select(`id, nombre, cantidad, observacion, estado, tanda, created_at, comanda_id, tipo, combo_detalle, comandas!inner ( mesa_id, mesas!inner ( nombre ) )`)
         .eq('comandas.local_id', localId)
         .in('estado', ['pendiente', 'en_preparacion', 'listo'])
         .order('created_at'),
@@ -105,6 +181,8 @@ export default function CocinaPage() {
       comanda_id: i.comanda_id,
       mesa_nombre: i.comandas?.mesas?.nombre ?? '?',
       origen: 'mesa' as const,
+      tipo: i.tipo ?? 'producto',
+      combo_detalle: i.combo_detalle ?? null,
     }))
 
     const deDelivery: ItemCocina[] = (itemsDelivery ?? []).map((i: any) => ({
@@ -256,52 +334,14 @@ export default function CocinaPage() {
                       <p className="text-gray-700 text-sm text-center py-6">—</p>
                     ) : (
                       colItems.map((item) => (
-                        <div
+                        <ItemCard
                           key={item.id}
-                          className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-2"
-                        >
-                          {/* Origen + tanda */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              {item.origen === 'delivery' && <span className="text-xs">🛵</span>}
-                              <span className={`text-xs font-bold ${item.origen === 'delivery' ? 'text-orange-400' : 'text-violet-400'}`}>
-                                {item.mesa_nombre}
-                              </span>
-                            </div>
-                            {item.origen === 'mesa' && <span className="text-xs text-gray-600">T{item.tanda}</span>}
-                          </div>
-
-                          {/* Producto */}
-                          <div className="flex items-start gap-2">
-                            <span className="text-lg font-black text-white leading-none">{item.cantidad}×</span>
-                            <span className="text-sm font-semibold text-white leading-snug">{item.nombre}</span>
-                          </div>
-
-                          {/* Observación */}
-                          {item.observacion && (
-                            <p className="text-xs text-amber-400 bg-amber-950/30 rounded-lg px-2 py-1 italic">
-                              {item.observacion}
-                            </p>
-                          )}
-
-                          {/* Tiempo + acción */}
-                          <div className="flex items-center justify-between pt-1">
-                            <span className={`text-xs font-medium ${colorTiempo(item.created_at)}`} suppressHydrationWarning>
-                              {tiempoEspera(item.created_at)}
-                            </span>
-                            <button
-                              onClick={() => avanzarEstado(item)}
-                              disabled={cambiando.has(item.id)}
-                              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition disabled:opacity-40
-                                ${col.key === 'pendiente'      ? 'bg-blue-600 hover:bg-blue-500 text-white' : ''}
-                                ${col.key === 'en_preparacion' ? 'bg-green-600 hover:bg-green-500 text-white' : ''}
-                                ${col.key === 'listo'          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : ''}
-                              `}
-                            >
-                              {cambiando.has(item.id) ? '...' : SIGUIENTE_LABEL[col.key]}
-                            </button>
-                          </div>
-                        </div>
+                          item={item}
+                          colKey={col.key}
+                          cambiando={cambiando.has(item.id)}
+                          siguienteLabel={SIGUIENTE_LABEL[col.key]}
+                          onAvanzar={() => avanzarEstado(item)}
+                        />
                       ))
                     )}
                   </div>
