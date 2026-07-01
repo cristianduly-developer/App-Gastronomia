@@ -161,7 +161,9 @@ export default function DeliveryPublicoPage() {
 
   const prodsMostrados = catSelec === 'todos'
     ? productos
-    : productos.filter((p) => p.categoria_id === catSelec)
+    : catSelec === 'promos'
+      ? []
+      : productos.filter((p) => p.categoria_id === catSelec)
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-white">
@@ -224,6 +226,12 @@ export default function DeliveryPublicoPage() {
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${catSelec === 'todos' ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
               Todos
             </button>
+            {combos.length > 0 && (
+              <button onClick={() => setCatSelec('promos')}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${catSelec === 'promos' ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
+                🎉 Promos
+              </button>
+            )}
             {categorias.map((c) => (
               <button key={c.id} onClick={() => setCatSelec(c.id)}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${catSelec === c.id ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
@@ -238,7 +246,7 @@ export default function DeliveryPublicoPage() {
       {paso === 'menu' && (
         <div className="max-w-lg mx-auto px-4 py-5 space-y-3 pb-32">
           {/* Promos */}
-          {catSelec === 'todos' && combos.length > 0 && (
+          {(catSelec === 'todos' || catSelec === 'promos') && combos.length > 0 && (
             <div className="space-y-3 mb-2">
               <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest">🎁 Promos</h2>
               {combos.map((combo) => {
@@ -300,6 +308,8 @@ export default function DeliveryPublicoPage() {
           {catSelec === 'todos' && prodsMostrados.length > 0 && (
             <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest pt-2">Productos</h2>
           )}
+
+          {catSelec === 'promos' && null}
 
           {prodsMostrados.map((p) => {
             const item = carrito.find((i) => i.producto_id === p.id)
