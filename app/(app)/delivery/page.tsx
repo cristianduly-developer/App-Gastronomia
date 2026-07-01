@@ -73,7 +73,7 @@ export default function DeliveryPage() {
   const [retiraEnLocal, setRetiraEnLocal] = useState(false)
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
   const [guardando, setGuardando] = useState(false)
-  const [clienteSugerido, setClienteSugerido] = useState<{ id: string; nombre: string; telefono: string; observaciones: string | null } | null>(null)
+  const [clienteSugerido, setClienteSugerido] = useState<{ id: string; nombre: string; telefono: string; direccion: string | null; observaciones: string | null } | null>(null)
   const [buscandoCliente, setBuscandoCliente] = useState(false)
 
   const cargar = useCallback(async () => {
@@ -144,7 +144,7 @@ export default function DeliveryPage() {
     setBuscandoCliente(true)
     const { data } = await supabaseApp
       .from('clientes')
-      .select('id, nombre, telefono, observaciones')
+      .select('id, nombre, telefono, direccion, observaciones')
       .eq('local_id', localId)
       .eq('activo', true)
       .ilike('telefono', `%${tel}%`)
@@ -160,6 +160,7 @@ export default function DeliveryPage() {
       ...c,
       nombre: clienteSugerido.nombre,
       tel: clienteSugerido.telefono ?? c.tel,
+      dir: clienteSugerido.direccion ?? c.dir,
       obs: clienteSugerido.observaciones ?? c.obs,
     }))
     setClienteSugerido(null)
@@ -452,6 +453,9 @@ export default function DeliveryPage() {
                       <span className="text-violet-400 text-sm">👤</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-violet-300">{clienteSugerido.nombre}</p>
+                        {clienteSugerido.direccion && (
+                          <p className="text-xs text-violet-400 truncate">{clienteSugerido.direccion}</p>
+                        )}
                         {clienteSugerido.observaciones && (
                           <p className="text-xs text-violet-500 truncate">{clienteSugerido.observaciones}</p>
                         )}
