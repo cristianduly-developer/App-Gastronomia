@@ -136,6 +136,7 @@
   <a href="#delivery">🛵 Delivery</a>
   <a href="#qr">📱 Menú QR</a>
   <a href="#productos">🍔 Productos</a>
+  <a href="#promos">🎉 Promos</a>
   <a href="#colaboradores">👥 Colaboradores</a>
   <a href="#config">⚙️ Config</a>
   <a href="#planes">⭐ Planes</a>
@@ -154,6 +155,7 @@
     <a href="#delivery">🛵 Delivery</a>
     <a href="#qr">📱 Menú QR</a>
     <a href="#productos">🍔 Productos</a>
+    <a href="#promos">🎉 Promos</a>
     <a href="#colaboradores">👥 Colaboradores</a>
     <a href="#config">⚙️ Configuración</a>
     <a href="#planes">⭐ Planes</a>
@@ -343,6 +345,45 @@
         <p>Organizá tus productos en categorías (Entradas, Principales, Postres, Bebidas...). En el tab <strong>Categorías</strong> podés crear, editar y eliminar.</p>
       </div>
       <div class="info"><strong>ℹ️ Límites por plan</strong> El plan Básico permite hasta 30 productos activos. El plan Profesional hasta 200. El plan Premium no tiene límite.</div>
+    </section>
+
+    <!-- PROMOS -->
+    <section id="promos">
+      <div class="section-title"><span>🎉</span> Promos</div>
+      <div class="card">
+        <h3>¿Qué son las Promos?</h3>
+        <p>Las Promos te permiten agrupar varios productos en un solo ítem con un precio especial. Por ejemplo: <strong>Hamburguesa + Papas + Gaseosa</strong> a un precio combo con descuento. Están disponibles desde el plan <strong>Profesional</strong>.</p>
+      </div>
+      <div class="card">
+        <h3>Cómo crear una Promo</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Andá a <strong>Promos</strong> en el menú lateral (ícono naranja ✨).</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Tocá <strong>+ Nueva promo</strong>.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Ingresá el nombre y (opcionalmente) una descripción.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Agregá los productos que incluye la promo y la cantidad de cada uno.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Ingresá el precio del combo. La app te muestra el precio normal y el ahorro % automáticamente.</div></div>
+          <div class="step"><div class="step-num">6</div><div class="step-text">Elegí dónde aplica: <strong>🪑 Mesas / QR</strong> y/o <strong>🛵 Delivery</strong>.</div></div>
+          <div class="step"><div class="step-num">7</div><div class="step-text">Guardá. La promo aparece disponible de inmediato en los canales seleccionados.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>¿Dónde se ven las Promos?</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Canal</th><th>Dónde aparece</th><th>Requiere</th></tr>
+            <tr><td>Menú QR (mesa)</td><td>Tab "🎁 Promos" en el menú del cliente</td><td>Promo con ✅ Mesas/QR</td></tr>
+            <tr><td>Delivery público</td><td>Sección "Promos" y tab "🎉 Promos" en el link de pedidos</td><td>Promo con ✅ Delivery</td></tr>
+            <tr><td>Delivery manual (backoffice)</td><td>Tab "🎁 Promos" al cargar un pedido telefónico</td><td>Promo con ✅ Delivery</td></tr>
+            <tr><td>Menú público</td><td>Sección "Promos" destacada con ribbon OFERTA</td><td>Cualquier promo activa</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Promos en cocina</h3>
+        <p>Cuando llega un pedido con una promo, el monitor de cocina muestra el nombre del combo con el badge <strong style="background:#ea580c;color:white;padding:1px 6px;border-radius:4px;font-size:0.8rem">COMBO</strong> y debajo lista todos los productos que incluye (ej: <em>2x Hamburguesa, 1x Coca Cola</em>).</p>
+      </div>
+      <div class="tip"><strong>💡 Tip</strong> Si una promo aplica solo a mesas, no va a aparecer en el link de delivery y viceversa. Así podés tener ofertas exclusivas por canal.</div>
+      <div class="warn"><strong>⚠️ Plan requerido</strong> Las Promos están disponibles en el plan <strong>Profesional</strong> o superior. En el plan Básico aparece la sección bloqueada.</div>
     </section>
 
     <!-- COLABORADORES -->
