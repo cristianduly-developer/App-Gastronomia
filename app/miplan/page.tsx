@@ -16,7 +16,7 @@ function fmt(n: number) { return '$' + Number(n).toLocaleString('es-AR') }
 
 export default function MiPlanPage() {
   const router = useRouter()
-  const { plan: planActual, estadoSuscripcion, diasRestantes, orgId } = useSession()
+  const { plan: planActual, estadoSuscripcion, diasRestantes } = useSession()
   const meta = PLANES_META[planActual ?? 'basico'] ?? PLANES_META.basico
 
   const [planesDB,       setPlanesDB]       = useState<any[]>([])
