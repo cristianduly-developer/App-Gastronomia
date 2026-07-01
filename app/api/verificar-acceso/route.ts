@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
       .maybeSingle()
 
     if (subData?.estado) {
-      return NextResponse.json({ error: 'cuenta_suspendida', estado: subData.estado }, { status: 403 })
+      return NextResponse.json({ error: 'cuenta_suspendida', estado: subData.estado, org_id: empData[0].org_id }, { status: 403 })
     }
   }
 
