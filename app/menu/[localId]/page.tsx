@@ -48,7 +48,7 @@ export default async function MenuPublicoPage({ params }: Params) {
 
   const cats: Categoria[] = categorias ?? []
   const prods: Producto[] = productos ?? []
-  const combosActivos: Combo[] = (combos ?? []) as Combo[]
+  const combosActivos: Combo[] = (combos ?? []) as unknown as Combo[]
 
   const tipoLabel = TIPO_LABELS[config.tipo_negocio] ?? 'Gastronomía'
   const waLink = config.telefono ? `https://wa.me/549${config.telefono.replace(/\D/g, '')}` : null
