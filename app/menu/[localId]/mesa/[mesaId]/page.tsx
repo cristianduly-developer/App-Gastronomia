@@ -64,7 +64,7 @@ export default function MenuMesaPage() {
       setMesaNombre(mesa.nombre)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
-      setCombos((combosData ?? []) as Combo[])
+      setCombos((combosData ?? []) as unknown as Combo[])
       setLoading(false)
     })
 

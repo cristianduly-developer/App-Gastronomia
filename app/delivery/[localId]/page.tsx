@@ -56,7 +56,7 @@ export default function DeliveryPublicoPage() {
       setConfigLocal(cfg)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
-      setCombos((combosData ?? []) as Combo[])
+      setCombos((combosData ?? []) as unknown as Combo[])
       setLoading(false)
     })
 
