@@ -14,9 +14,9 @@ interface Combo {
   combo_items: ComboItem[]
 }
 
-export default function CombosPage() {
+export default function PromosPage() {
   const { localId, plan } = useSession()
-  const [combos, setCombos] = useState<Combo[]>([])
+  const [combos, setPromos] = useState<Combo[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -45,7 +45,7 @@ export default function CombosPage() {
         .eq('activo', true)
         .order('nombre'),
     ])
-    setCombos(combosData ?? [])
+    setPromos(combosData ?? [])
     setProductos(prodsData ?? [])
     setLoading(false)
   }
@@ -126,7 +126,7 @@ export default function CombosPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <p className="text-4xl mb-4">🔒</p>
-            <p className="text-white font-semibold text-lg">Combos y Promos</p>
+            <p className="text-white font-semibold text-lg">Promos</p>
             <p className="text-gray-400 text-sm mt-2">Disponible en plan Profesional o superior</p>
           </div>
         </div>
@@ -139,14 +139,14 @@ export default function CombosPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Combos y Promos</h1>
+            <h1 className="text-2xl font-bold text-white">Promos</h1>
             <p className="text-sm text-gray-500 mt-0.5">Agrupá productos con un precio especial</p>
           </div>
           <button
             onClick={abrirNuevo}
             className="bg-orange-600 hover:bg-orange-500 text-white font-semibold px-4 py-2 rounded-xl text-sm transition"
           >
-            + Nuevo combo
+            + Nueva promo
           </button>
         </div>
 
@@ -208,7 +208,7 @@ export default function CombosPage() {
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-5 border-b border-gray-800 flex items-center justify-between">
-              <h2 className="font-bold text-white">{editCombo ? 'Editar combo' : 'Nuevo combo'}</h2>
+              <h2 className="font-bold text-white">{editCombo ? 'Editar promo' : 'Nueva promo'}</h2>
               <button onClick={() => setModal(false)} className="text-gray-500 hover:text-white text-xl">✕</button>
             </div>
             <div className="p-5 space-y-4">
@@ -309,7 +309,7 @@ export default function CombosPage() {
                 disabled={guardando || !form.nombre || !form.precio || items.some((i) => !i.producto_id) || (!form.aplica_mesas && !form.aplica_delivery)}
                 className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition"
               >
-                {guardando ? 'Guardando...' : editCombo ? 'Guardar cambios' : 'Crear combo'}
+                {guardando ? 'Guardando...' : editCombo ? 'Guardar cambios' : 'Crear promo'}
               </button>
             </div>
           </div>

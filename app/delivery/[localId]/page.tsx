@@ -29,7 +29,7 @@ export default function DeliveryPublicoPage() {
   const [configLocal, setConfigLocal] = useState<ConfigLocal | null>(null)
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
-  const [combos, setCombos] = useState<Combo[]>([])
+  const [combos, setPromos] = useState<Combo[]>([])
   const [catSelec, setCatSelec] = useState('todos')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [paso, setPaso] = useState<Paso>('menu')
@@ -56,7 +56,7 @@ export default function DeliveryPublicoPage() {
       setConfigLocal(cfg)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
-      setCombos((combosData ?? []) as unknown as Combo[])
+      setPromos((combosData ?? []) as unknown as Combo[])
       setLoading(false)
     })
 
@@ -237,10 +237,10 @@ export default function DeliveryPublicoPage() {
       {/* MENÚ */}
       {paso === 'menu' && (
         <div className="max-w-lg mx-auto px-4 py-5 space-y-3 pb-32">
-          {/* Combos */}
+          {/* Promos */}
           {catSelec === 'todos' && combos.length > 0 && (
             <div className="space-y-3 mb-2">
-              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest">🎁 Combos y Promos</h2>
+              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest">🎁 Promos</h2>
               {combos.map((combo) => {
                 const enCarrito = carrito.find((i) => i.producto_id === combo.id && i.tipo === 'combo')
                 const partes = combo.combo_items.map((ci) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean).join(' + ')

@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { href: '/cocina',        label: 'Cocina',         emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
   { href: '/delivery',      label: 'Delivery',       emoji: '🛵', permiso: 'verDelivery',      config: 'usaDelivery' },
   { href: '/productos',     label: 'Productos',      emoji: '🍔', permiso: 'verProductos',     config: null },
-  { href: '/combos',        label: 'Combos',         emoji: '🎁', permiso: 'verProductos',     config: null },
+  { href: '/combos',        label: 'Promos 🎉',      emoji: '✨', permiso: 'verProductos',     config: null },
   { href: '/clientes',      label: 'Clientes',       emoji: '👥', permiso: 'verClientes',      config: null },
   { href: '/caja',          label: 'Caja',           emoji: '🧾', permiso: 'verCaja',          config: null },
   { href: '/reportes',      label: 'Reportes',       emoji: '📈', permiso: 'verReportes',      config: null },
@@ -77,9 +77,13 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                ${active
-                  ? 'bg-violet-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                ${item.href === '/combos'
+                  ? active
+                    ? 'bg-orange-600 text-white'
+                    : 'text-orange-400 hover:text-white bg-orange-950/40 hover:bg-orange-600 border border-orange-800/40'
+                  : active
+                    ? 'bg-violet-600 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               <span className="text-base">{item.emoji}</span>
               <span className="flex-1">{item.label}</span>

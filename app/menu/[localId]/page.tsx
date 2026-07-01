@@ -105,7 +105,7 @@ export default async function MenuPublicoPage({ params }: Params) {
             {combosActivos.length > 0 && (
               <a href="#combos"
                 className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-medium whitespace-nowrap transition">
-                🎁 Combos
+                🎉 Promos
               </a>
             )}
             {cats.map((c) => (
@@ -120,10 +120,10 @@ export default async function MenuPublicoPage({ params }: Params) {
 
       {/* Contenido */}
       <div className="max-w-lg mx-auto px-4 py-5 space-y-8 pb-10" id="todos">
-        {/* Combos */}
+        {/* Promos */}
         {combosActivos.length > 0 && (
           <section id="combos">
-            <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Combos y Promos</h2>
+            <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Promos</h2>
             <div className="space-y-3">
               {combosActivos.map((combo) => <ComboCard key={combo.id} combo={combo} />)}
             </div>

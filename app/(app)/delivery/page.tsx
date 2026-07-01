@@ -68,7 +68,7 @@ export default function DeliveryPage() {
   const [modalNuevo, setModalNuevo] = useState(false)
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
-  const [combosBackoffice, setCombosBackoffice] = useState<ComboBackoffice[]>([])
+  const [combosBackoffice, setPromosBackoffice] = useState<ComboBackoffice[]>([])
   const [catSelec, setCatSelec] = useState('combos')
   const [items, setItems] = useState<ItemForm[]>([])
   const [cliente, setCliente] = useState({ nombre: '', tel: '', dir: '', obs: '' })
@@ -177,7 +177,7 @@ export default function DeliveryPage() {
     ])
     setCategorias(cats ?? [])
     setProductos(prods ?? [])
-    setCombosBackoffice(combosData ?? [])
+    setPromosBackoffice(combosData ?? [])
     setCatSelec(combosData?.length ? 'combos' : (cats?.[0]?.id ?? ''))
     setItems([])
     setCliente({ nombre: '', tel: '', dir: '', obs: '' })
@@ -513,7 +513,7 @@ export default function DeliveryPage() {
                   {combosBackoffice.length > 0 && (
                     <button onClick={() => setCatSelec('combos')}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition ${catSelec === 'combos' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
-                      🎁 Combos
+                      🎉 Promos
                     </button>
                   )}
                   {categorias.map((c) => (

@@ -37,7 +37,7 @@ export default function MenuMesaPage() {
   const [mesaNombre, setMesaNombre] = useState('')
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
-  const [combos, setCombos] = useState<Combo[]>([])
+  const [combos, setPromos] = useState<Combo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -64,7 +64,7 @@ export default function MenuMesaPage() {
       setMesaNombre(mesa.nombre)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
-      setCombos((combosData ?? []) as unknown as Combo[])
+      setPromos((combosData ?? []) as unknown as Combo[])
       setLoading(false)
     })
 
@@ -233,7 +233,7 @@ export default function MenuMesaPage() {
             {combos.length > 0 && (
               <button onClick={() => setTabActivo('combos')}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${tabActivo === 'combos' ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
-                🎁 Combos
+                🎉 Promos
               </button>
             )}
             {categorias.map((c) => (
@@ -260,7 +260,7 @@ export default function MenuMesaPage() {
           )}
           {(tabActivo === 'todos' || tabActivo === 'combos') && combos.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Combos y Promos</h2>
+              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Promos</h2>
               <div className="space-y-3">
                 {combos.map((combo) => {
                   const enCart = cart.find((i) => i.productoId === combo.id && i.tipo === 'combo')
