@@ -292,20 +292,21 @@ export default function CajaPage() {
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
                       <h3 className="font-bold text-white text-sm">Por canal</h3>
                       {[
-                        { label: 'Mesas / Comandas', value: porOrigen.comanda, color: 'text-violet-400', icon: '🪑' },
+                        { label: 'Mesas / Comandas', value: porOrigen.comanda,  color: 'text-violet-400', icon: '🪑' },
                         { label: 'Delivery',          value: porOrigen.delivery, color: 'text-orange-400', icon: '🛵' },
-                        { label: 'QR mesa',           value: porOrigen.qr,      color: 'text-green-400',  icon: '📱' },
-                      ].map((r) => (
+                        { label: 'QR mesa',           value: porOrigen.qr,       color: 'text-green-400',  icon: '📱' },
+                      ].filter((r) => r.value > 0).map((r) => (
                         <div key={r.label} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span>{r.icon}</span>
                             <span className="text-sm text-gray-300">{r.label}</span>
                           </div>
-                          <span className={`text-sm font-bold ${r.value > 0 ? r.color : 'text-gray-600'}`}>
+                          <span className={`text-sm font-bold ${r.color}`}>
                             ${r.value.toLocaleString()}
                           </span>
                         </div>
                       ))}
+                      {totalVentas === 0 && <p className="text-gray-600 text-sm">Sin ventas registradas</p>}
                       <div className="border-t border-gray-800 pt-3 flex justify-between">
                         <span className="text-sm font-bold text-white">Total</span>
                         <span className="text-sm font-bold text-white">${totalVentas.toLocaleString()}</span>
