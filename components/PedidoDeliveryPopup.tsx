@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PedidoDeliveryNotif } from '@/context/AppRealtimeContext'
@@ -26,17 +26,17 @@ export function PedidoDeliveryPopup({ pedido, onCerrar }: Props) {
       <div className="bg-gray-900 border border-orange-700 rounded-2xl shadow-2xl p-4 w-80">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{esRetiro ? 'ðŸ¥¡' : 'ðŸ›µ'}</span>
+            <span className="text-2xl">{esRetiro ? '🥡' : '🛵'}</span>
             <div>
               <p className="text-sm font-bold text-white">Nuevo pedido delivery</p>
               <p className="text-xs text-orange-400">{pedido.cliente_nombre}</p>
             </div>
           </div>
-          <button onClick={() => { setVisible(false); onCerrar() }} className="text-gray-500 hover:text-white transition text-lg leading-none">âœ•</button>
+          <button onClick={() => { setVisible(false); onCerrar() }} className="text-gray-500 hover:text-white transition text-lg leading-none">✕</button>
         </div>
 
         <p className="text-xs text-gray-400 mb-1">
-          {esRetiro ? 'ðŸ¥¡ Retira en el local' : `ðŸ“ ${pedido.cliente_dir}`}
+          {esRetiro ? '🥡 Retira en el local' : `📍 ${pedido.cliente_dir}`}
         </p>
         <p className="text-sm font-semibold text-white mb-3">${pedido.total.toLocaleString()}</p>
 
@@ -48,10 +48,9 @@ export function PedidoDeliveryPopup({ pedido, onCerrar }: Props) {
           onClick={() => { router.push('/delivery'); setVisible(false); onCerrar() }}
           className="w-full bg-orange-600 hover:bg-orange-500 text-white font-semibold text-sm rounded-xl py-2 transition"
         >
-          Ver pedido â†’
+          Ver pedido →
         </button>
       </div>
     </div>
   )
 }
-
