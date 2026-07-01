@@ -25,26 +25,23 @@ interface PedidoDelivery {
 }
 
 const ESTADOS = [
-  { key: 'recibido',   label: 'Recibido',    color: 'border-yellow-600', badge: 'bg-yellow-900 text-yellow-300', dot: 'bg-yellow-500' },
-  { key: 'en_cocina',  label: 'En cocina',   color: 'border-blue-600',   badge: 'bg-blue-900 text-blue-300',     dot: 'bg-blue-500' },
-  { key: 'en_camino',  label: 'En camino',   color: 'border-violet-600', badge: 'bg-violet-900 text-violet-300', dot: 'bg-violet-500' },
-  { key: 'entregado',  label: 'Entregado',   color: 'border-green-600',  badge: 'bg-green-900 text-green-300',   dot: 'bg-green-500' },
+  { key: 'recibido',  label: 'Recibido',  color: 'border-yellow-600', badge: 'bg-yellow-900 text-yellow-300', dot: 'bg-yellow-500' },
+  { key: 'en_cocina', label: 'En cocina', color: 'border-blue-600',   badge: 'bg-blue-900 text-blue-300',     dot: 'bg-blue-500' },
+  { key: 'en_camino', label: 'En camino', color: 'border-violet-600', badge: 'bg-violet-900 text-violet-300', dot: 'bg-violet-500' },
 ] as const
 
 type EstadoKey = typeof ESTADOS[number]['key']
 
-const SIGUIENTE: Record<EstadoKey, EstadoKey | null> = {
+const SIGUIENTE: Record<EstadoKey, string | null> = {
   recibido:  'en_cocina',
   en_cocina: 'en_camino',
   en_camino: 'entregado',
-  entregado:  null,
 }
 
 const SIGUIENTE_LABEL: Record<EstadoKey, string> = {
   recibido:  'Pasar a cocina',
   en_cocina: 'En camino',
-  en_camino: 'Entregado',
-  entregado: '',
+  en_camino: 'Cobrar y entregar',
 }
 
 const METODO_LABELS: Record<string, string> = {
@@ -307,7 +304,7 @@ export default function DeliveryPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-4 flex-1 min-h-0">
+          <div className="grid grid-cols-3 gap-4 flex-1 min-h-0">
             {ESTADOS.map((col) => {
               const colPedidos = pedidosPorEstado(col.key)
               return (
