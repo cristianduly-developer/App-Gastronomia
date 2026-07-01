@@ -87,17 +87,9 @@ function ItemCard({ item, colKey, cambiando, siguienteLabel, onAvanzar }: {
             <span className="text-sm font-semibold text-white leading-snug">{item.nombre}</span>
           </div>
           {esCombo && item.combo_detalle && (
-            <button
-              onClick={() => setExpandido((v) => !v)}
-              className="text-xs text-orange-400/70 hover:text-orange-400 mt-0.5 transition"
-            >
-              {expandido ? '▲ Ocultar detalle' : '▼ Ver contenido'}
-            </button>
-          )}
-          {esCombo && expandido && item.combo_detalle && (
-            <div className="mt-1.5 bg-gray-800/60 rounded-lg px-2 py-1.5 space-y-0.5">
+            <div className="mt-1 space-y-0.5">
               {item.combo_detalle.split('\n').map((linea, i) => (
-                <p key={i} className="text-xs text-gray-300">{linea}</p>
+                <p key={i} className="text-xs text-orange-300/80">{linea}</p>
               ))}
             </div>
           )}
@@ -149,12 +141,17 @@ function colorTiempo(created_at: string) {
 export default function CocinaPage() {
   const { localId, nombreUsuario } = useSession()
   const [items, setItems] = useState<ItemCocina[]>([])
+  const itemsRef = useRef<ItemCocina[]>([])
   const [loading, setLoading] = useState(true)
   const [tick, setTick] = useState(0)
   const [cambiando, setCambiando] = useState<Set<string>>(new Set())
   const { activo: wakeLockActivo, activar: activarWakeLock, desactivar: desactivarWakeLock } = useWakeLock()
 
   const cargarItems = useCallback(async () => {
+    const estadosDeliveryLocal = new Map(
+      itemsRef.current.filter((i) => i.origen === 'delivery').map((i) => [i.id, i.estado])
+    )
+
     const [{ data: itemsMesa }, { data: itemsDelivery }] = await Promise.all([
       supabaseApp
         .from('items_comanda')
@@ -190,7 +187,7 @@ export default function CocinaPage() {
       nombre: i.nombre,
       cantidad: i.cantidad,
       observacion: i.observacion,
-      estado: 'pendiente' as const,
+      estado: estadosDeliveryLocal.get(i.id) ?? 'pendiente' as const,
       tanda: 1,
       created_at: i.created_at,
       comanda_id: '',
@@ -199,7 +196,9 @@ export default function CocinaPage() {
       pedido_delivery_id: i.pedido_delivery_id,
     }))
 
-    setItems([...deMesa, ...deDelivery].sort((a, b) => a.created_at.localeCompare(b.created_at)))
+    const merged = [...deMesa, ...deDelivery].sort((a, b) => a.created_at.localeCompare(b.created_at))
+    setItems(merged)
+    itemsRef.current = merged
     setLoading(false)
   }, [localId])
 
@@ -220,7 +219,7 @@ export default function CocinaPage() {
       supabaseApp.removeChannel(channel)
       clearInterval(interval)
     }
-  }, [localId, cargarItems])
+  }, [localId])
 
   const avanzarEstado = async (item: ItemCocina) => {
     const siguiente: Record<EstadoColumna, string> = {
@@ -234,14 +233,14 @@ export default function CocinaPage() {
     setCambiando((s) => new Set(s).add(item.id))
 
     if (item.origen === 'delivery') {
-      // Items de delivery: cuando llegan a "listo" desaparecen de cocina
-      // (el estado del pedido lo maneja el panel de delivery)
       if (nuevoEstado === 'entregado' || nuevoEstado === 'listo') {
-        setItems((prev) => prev.filter((i) => i.id !== item.id))
+        setItems((prev) => { const r = prev.filter((i) => i.id !== item.id); itemsRef.current = r; return r })
       } else {
-        setItems((prev) =>
-          prev.map((i) => i.id === item.id ? { ...i, estado: nuevoEstado as ItemCocina['estado'] } : i)
-        )
+        setItems((prev) => {
+          const r = prev.map((i) => i.id === item.id ? { ...i, estado: nuevoEstado as ItemCocina['estado'] } : i)
+          itemsRef.current = r
+          return r
+        })
       }
     } else {
       await supabaseApp
