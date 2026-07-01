@@ -224,12 +224,18 @@ export default function MenuMesaPage() {
           )}
         </div>
 
-        {paso === 'menu' && categorias.length > 0 && (
+        {paso === 'menu' && (categorias.length > 0 || combos.length > 0) && (
           <div className="max-w-lg mx-auto px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
             <button onClick={() => setTabActivo('todos')}
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${tabActivo === 'todos' ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
               Todos
             </button>
+            {combos.length > 0 && (
+              <button onClick={() => setTabActivo('combos')}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${tabActivo === 'combos' ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
+                🎁 Combos
+              </button>
+            )}
             {categorias.map((c) => (
               <button key={c.id} onClick={() => setTabActivo(c.id)}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition ${tabActivo === c.id ? 'bg-orange-500 text-white' : 'bg-[#1e1e1e] text-gray-400 hover:text-white'}`}>
@@ -252,7 +258,7 @@ export default function MenuMesaPage() {
               </div>
             </div>
           )}
-          {tabActivo === 'todos' && combos.length > 0 && (
+          {(tabActivo === 'todos' || tabActivo === 'combos') && combos.length > 0 && (
             <section>
               <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">🎁 Combos y Promos</h2>
               <div className="space-y-3">
@@ -267,7 +273,7 @@ export default function MenuMesaPage() {
                           ? <img src={combo.imagen_url} alt={combo.nombre} className="w-full h-full object-cover absolute inset-0" />
                           : <div className="w-full h-full flex items-center justify-center text-3xl opacity-30">🎁</div>
                         }
-                        <div className="absolute top-1.5 left-1.5 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">COMBO</div>
+                        <div className="absolute top-3 -left-5 w-20 bg-orange-600 text-white text-[9px] font-bold text-center py-0.5 rotate-[-45deg]">OFERTA</div>
                       </div>
                       <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
                         <div>
@@ -302,7 +308,7 @@ export default function MenuMesaPage() {
             </section>
           )}
 
-          {tabActivo === 'todos' ? (
+          {tabActivo !== 'combos' && tabActivo === 'todos' ? (
             categorias.map((cat) => {
               const prodsCat = prodsFiltrados.filter((p) => p.categoria_id === cat.id)
               if (prodsCat.length === 0) return null

@@ -252,7 +252,7 @@ export default function DeliveryPublicoPage() {
                         ? <img src={combo.imagen_url} alt={combo.nombre} className="w-full h-full object-cover absolute inset-0" />
                         : <div className="w-full h-full flex items-center justify-center text-3xl opacity-30">🎁</div>
                       }
-                      <div className="absolute top-1.5 left-1.5 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">COMBO</div>
+                      <div className="absolute top-3 -left-5 w-20 bg-orange-600 text-white text-[9px] font-bold text-center py-0.5 rotate-[-45deg]">OFERTA</div>
                     </div>
                     <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
                       <div>
@@ -295,6 +295,10 @@ export default function DeliveryPublicoPage() {
                 )
               })}
             </div>
+          )}
+
+          {catSelec === 'todos' && prodsMostrados.length > 0 && (
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest pt-2">Productos</h2>
           )}
 
           {prodsMostrados.map((p) => {

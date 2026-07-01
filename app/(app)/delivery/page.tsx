@@ -7,8 +7,9 @@ import { useSession } from '@/lib/sessionStore'
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string }
 interface Categoria { id: string; nombre: string }
+interface ComboBackoffice { id: string; nombre: string; precio: number }
 
-interface ItemForm { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string }
+interface ItemForm { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string; tipo?: 'producto' | 'combo' }
 
 interface PedidoDelivery {
   id: string
@@ -67,7 +68,8 @@ export default function DeliveryPage() {
   const [modalNuevo, setModalNuevo] = useState(false)
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
-  const [catSelec, setCatSelec] = useState('')
+  const [combosBackoffice, setCombosBackoffice] = useState<ComboBackoffice[]>([])
+  const [catSelec, setCatSelec] = useState('combos')
   const [items, setItems] = useState<ItemForm[]>([])
   const [cliente, setCliente] = useState({ nombre: '', tel: '', dir: '', obs: '' })
   const [retiraEnLocal, setRetiraEnLocal] = useState(false)
@@ -168,13 +170,15 @@ export default function DeliveryPage() {
 
   // Cargar carta para modal manual
   const abrirModalNuevo = async () => {
-    const [{ data: cats }, { data: prods }] = await Promise.all([
+    const [{ data: cats }, { data: prods }, { data: combosData }] = await Promise.all([
       supabaseApp.from('categorias').select('id, nombre').eq('local_id', localId).eq('activo', true).order('orden'),
       supabaseApp.from('productos').select('id, nombre, precio, categoria_id').eq('local_id', localId).eq('activo', true).order('nombre'),
+      supabaseApp.from('combos').select('id, nombre, precio').eq('local_id', localId).eq('activo', true).eq('aplica_delivery', true).order('nombre'),
     ])
     setCategorias(cats ?? [])
     setProductos(prods ?? [])
-    setCatSelec(cats?.[0]?.id ?? '')
+    setCombosBackoffice(combosData ?? [])
+    setCatSelec(combosData?.length ? 'combos' : (cats?.[0]?.id ?? ''))
     setItems([])
     setCliente({ nombre: '', tel: '', dir: '', obs: '' })
     setRetiraEnLocal(false)
@@ -183,21 +187,23 @@ export default function DeliveryPage() {
     setModalNuevo(true)
   }
 
-  const agregarProducto = (p: Producto) => {
+  const agregarItem = (id: string, nombre: string, precio: number, tipo: 'producto' | 'combo' = 'producto') => {
     setItems((prev) => {
-      const idx = prev.findIndex((i) => i.producto_id === p.id)
+      const idx = prev.findIndex((i) => i.producto_id === id && i.tipo === tipo)
       if (idx >= 0) {
         const copia = [...prev]
-        copia[idx] = { ...copia[idx], cantidad: copia[idx].cantidad + 1, subtotal: (copia[idx].cantidad + 1) * copia[idx].precio }
+        copia[idx] = { ...copia[idx], cantidad: copia[idx].cantidad + 1, subtotal: (copia[idx].cantidad + 1) * precio }
         return copia
       }
-      return [...prev, { producto_id: p.id, nombre: p.nombre, precio: p.precio, cantidad: 1, subtotal: p.precio, observacion: '' }]
+      return [...prev, { producto_id: id, nombre, precio, cantidad: 1, subtotal: precio, observacion: '', tipo }]
     })
   }
 
-  const quitarProducto = (productoId: string) => {
+  const agregarProducto = (p: Producto) => agregarItem(p.id, p.nombre, p.precio, 'producto')
+
+  const quitarProducto = (productoId: string, tipo: 'producto' | 'combo' = 'producto') => {
     setItems((prev) => {
-      const idx = prev.findIndex((i) => i.producto_id === productoId)
+      const idx = prev.findIndex((i) => i.producto_id === productoId && i.tipo === tipo)
       if (idx < 0) return prev
       const copia = [...prev]
       if (copia[idx].cantidad > 1) {
@@ -234,9 +240,10 @@ export default function DeliveryPage() {
     const { error: errorItems } = await supabaseApp.from('items_pedido_delivery').insert(
       items.map((i) => ({
         pedido_delivery_id: pedido.id,
-        producto_id: i.producto_id,
+        producto_id: i.tipo === 'combo' ? null : i.producto_id,
         nombre: i.nombre,
         precio: i.precio,
+        precio_unitario: i.precio,
         cantidad: i.cantidad,
         subtotal: i.subtotal,
         observacion: i.observacion || null,
@@ -502,42 +509,71 @@ export default function DeliveryPage() {
               {/* Carta */}
               <div>
                 <p className="text-xs text-gray-400 mb-2">Productos</p>
-                {/* Tabs categorías */}
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+                  {combosBackoffice.length > 0 && (
+                    <button onClick={() => setCatSelec('combos')}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition ${catSelec === 'combos' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
+                      🎁 Combos
+                    </button>
+                  )}
                   {categorias.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setCatSelec(c.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition
-                        ${catSelec === c.id ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}
-                    >
+                    <button key={c.id} onClick={() => setCatSelec(c.id)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition ${catSelec === c.id ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
                       {c.nombre}
                     </button>
                   ))}
                 </div>
                 <div className="space-y-2">
-                  {productos.filter((p) => p.categoria_id === catSelec).map((p) => {
-                    const item = items.find((i) => i.producto_id === p.id)
-                    return (
-                      <div key={p.id} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
-                        <div>
-                          <p className="text-sm font-medium text-white">{p.nombre}</p>
-                          <p className="text-xs text-gray-500">${p.precio.toLocaleString()}</p>
+                  {catSelec === 'combos' ? (
+                    combosBackoffice.map((c) => {
+                      const item = items.find((i) => i.producto_id === c.id && i.tipo === 'combo')
+                      return (
+                        <div key={c.id} className="flex items-center justify-between bg-gray-800 border border-orange-900/30 rounded-xl px-4 py-3">
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">COMBO</span>
+                              <p className="text-sm font-medium text-white">{c.nombre}</p>
+                            </div>
+                            <p className="text-xs text-orange-400">${c.precio.toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {item ? (
+                              <>
+                                <button onClick={() => quitarProducto(c.id, 'combo')} className="w-7 h-7 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-bold transition">−</button>
+                                <span className="text-sm font-semibold text-white w-4 text-center">{item.cantidad}</span>
+                                <button onClick={() => agregarItem(c.id, c.nombre, c.precio, 'combo')} className="w-7 h-7 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-bold transition">+</button>
+                              </>
+                            ) : (
+                              <button onClick={() => agregarItem(c.id, c.nombre, c.precio, 'combo')} className="w-7 h-7 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-bold transition">+</button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {item ? (
-                            <>
-                              <button onClick={() => quitarProducto(p.id)} className="w-7 h-7 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-bold transition">−</button>
-                              <span className="text-sm font-semibold text-white w-4 text-center">{item.cantidad}</span>
+                      )
+                    })
+                  ) : (
+                    productos.filter((p) => p.categoria_id === catSelec).map((p) => {
+                      const item = items.find((i) => i.producto_id === p.id && i.tipo !== 'combo')
+                      return (
+                        <div key={p.id} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
+                          <div>
+                            <p className="text-sm font-medium text-white">{p.nombre}</p>
+                            <p className="text-xs text-gray-500">${p.precio.toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {item ? (
+                              <>
+                                <button onClick={() => quitarProducto(p.id)} className="w-7 h-7 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-bold transition">−</button>
+                                <span className="text-sm font-semibold text-white w-4 text-center">{item.cantidad}</span>
+                                <button onClick={() => agregarProducto(p)} className="w-7 h-7 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-bold transition">+</button>
+                              </>
+                            ) : (
                               <button onClick={() => agregarProducto(p)} className="w-7 h-7 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-bold transition">+</button>
-                            </>
-                          ) : (
-                            <button onClick={() => agregarProducto(p)} className="w-7 h-7 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-bold transition">+</button>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  )}
                 </div>
               </div>
 
