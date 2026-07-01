@@ -7,7 +7,7 @@ import { useSession } from '@/lib/sessionStore'
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string }
 interface Categoria { id: string; nombre: string }
-interface ComboBackoffice { id: string; nombre: string; precio: number; combo_items?: { cantidad: number; productos: { nombre: string } | null }[] }
+interface ComboBackoffice { id: string; nombre: string; precio: number; combo_items?: { cantidad: number; productos: { nombre: string }[] }[] }
 
 interface ItemForm { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string; tipo?: 'producto' | 'combo' }
 
@@ -242,7 +242,7 @@ export default function DeliveryPage() {
         const esCombo = i.tipo === 'combo'
         const comboInfo = esCombo ? combosBackoffice.find((c) => c.id === i.producto_id) : null
         const comboDetalle = comboInfo?.combo_items
-          ? comboInfo.combo_items.map((ci: any) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean).join('\n')
+          ? comboInfo.combo_items.map((ci) => `${ci.cantidad}x ${ci.productos?.[0]?.nombre ?? ''}`).filter(Boolean).join('\n')
           : null
         return {
           pedido_delivery_id: pedido.id,
