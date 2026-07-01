@@ -26,22 +26,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Demasiados pedidos. Esperá un momento.' }, { status: 429 })
   }
 
-  // Recalcular total server-side usando precios reales de BD
-  const productoIds = carrito.map((i: { producto_id: string }) => i.producto_id)
-  const { data: productosDB } = await supabaseAdmin
-    .from('productos')
-    .select('id, precio')
-    .eq('local_id', localId)
-    .in('id', productoIds)
+  const itemsProducto = carrito.filter((i: any) => i.tipo !== 'combo')
+  const itemsCombo = carrito.filter((i: any) => i.tipo === 'combo')
 
-  if (!productosDB?.length) {
-    return NextResponse.json({ error: 'Productos no encontrados' }, { status: 400 })
+  // Validar precios de productos normales
+  const productoIds = itemsProducto.map((i: any) => i.producto_id).filter(Boolean)
+  const precioMap: Record<string, number> = {}
+
+  if (productoIds.length > 0) {
+    const { data: productosDB } = await supabaseAdmin
+      .from('productos')
+      .select('id, precio')
+      .eq('local_id', localId)
+      .in('id', productoIds)
+
+    if (!productosDB?.length && itemsProducto.length > 0) {
+      return NextResponse.json({ error: 'Productos no encontrados' }, { status: 400 })
+    }
+    for (const p of productosDB ?? []) precioMap[p.id] = p.precio
   }
 
-  const precioMap = Object.fromEntries(productosDB.map((p: { id: string; precio: number }) => [p.id, p.precio]))
-  const totalReal = carrito.reduce((acc: number, i: { producto_id: string; cantidad: number }) => {
-    return acc + (precioMap[i.producto_id] ?? 0) * i.cantidad
-  }, 0)
+  // Validar precios de combos
+  const comboIds = itemsCombo.map((i: any) => i.producto_id).filter(Boolean)
+  const comboPrecioMap: Record<string, number> = {}
+
+  if (comboIds.length > 0) {
+    const { data: combosDB } = await supabaseAdmin
+      .from('combos')
+      .select('id, precio')
+      .eq('local_id', localId)
+      .in('id', comboIds)
+
+    for (const c of combosDB ?? []) comboPrecioMap[c.id] = c.precio
+  }
+
+  const getPrecio = (i: any) => i.tipo === 'combo' ? (comboPrecioMap[i.producto_id] ?? 0) : (precioMap[i.producto_id] ?? 0)
+  const totalReal = carrito.reduce((acc: number, i: any) => acc + getPrecio(i) * i.cantidad, 0)
 
   const { data: pedido, error } = await supabaseAdmin
     .from('pedidos_delivery')
@@ -64,16 +84,19 @@ export async function POST(req: NextRequest) {
   }
 
   const { error: itemsError } = await supabaseAdmin.from('items_pedido_delivery').insert(
-    carrito.map((i: { producto_id: string; nombre: string; cantidad: number; observacion?: string | null }) => ({
-      pedido_delivery_id: pedido.id,
-      producto_id: i.producto_id,
-      nombre: i.nombre,
-      precio: precioMap[i.producto_id] ?? 0,
-      precio_unitario: precioMap[i.producto_id] ?? 0,
-      cantidad: i.cantidad,
-      subtotal: (precioMap[i.producto_id] ?? 0) * i.cantidad,
-      observacion: i.observacion ?? null,
-    }))
+    carrito.map((i: any) => {
+      const precio = getPrecio(i)
+      return {
+        pedido_delivery_id: pedido.id,
+        producto_id: i.tipo === 'combo' ? null : i.producto_id,
+        nombre: i.nombre,
+        precio,
+        precio_unitario: precio,
+        cantidad: i.cantidad,
+        subtotal: precio * i.cantidad,
+        observacion: i.observacion ?? null,
+      }
+    })
   )
 
   if (itemsError) {

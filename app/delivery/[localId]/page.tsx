@@ -11,7 +11,9 @@ const supabaseAnon = createClient(
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string; descripcion: string | null; imagen_url: string | null; agotado: boolean }
 interface Categoria { id: string; nombre: string; orden: number }
 interface ConfigLocal { nombre_negocio: string; logo_url: string | null; telefono: string | null; tipo_negocio: string; tiempo_entrega_estimado: string | null }
-interface ItemCarrito { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string }
+interface ComboItemDB { producto_id: string; cantidad: number; productos: { nombre: string } | null }
+interface Combo { id: string; nombre: string; descripcion: string | null; precio: number; imagen_url: string | null; combo_items: ComboItemDB[] }
+interface ItemCarrito { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string; tipo?: 'producto' | 'combo' }
 
 type Paso = 'menu' | 'carrito' | 'datos' | 'confirmado'
 
@@ -27,6 +29,7 @@ export default function DeliveryPublicoPage() {
   const [configLocal, setConfigLocal] = useState<ConfigLocal | null>(null)
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [productos, setProductos] = useState<Producto[]>([])
+  const [combos, setCombos] = useState<Combo[]>([])
   const [catSelec, setCatSelec] = useState('todos')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [paso, setPaso] = useState<Paso>('menu')
@@ -48,10 +51,12 @@ export default function DeliveryPublicoPage() {
       supabaseAnon.from('config_local').select('nombre_negocio, logo_url, telefono, tipo_negocio, tiempo_entrega_estimado').eq('local_id', localId).single(),
       supabaseAnon.from('categorias').select('id, nombre, orden').eq('local_id', localId).eq('activo', true).order('orden'),
       supabaseAnon.from('productos').select('id, nombre, precio, categoria_id, descripcion, imagen_url, agotado').eq('local_id', localId).eq('activo', true).order('nombre'),
-    ]).then(([{ data: cfg }, { data: cats }, { data: prods }]) => {
+      supabaseAnon.from('combos').select('id, nombre, descripcion, precio, imagen_url, combo_items(producto_id, cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).eq('aplica_delivery', true).order('nombre'),
+    ]).then(([{ data: cfg }, { data: cats }, { data: prods }, { data: combosData }]) => {
       setConfigLocal(cfg)
       setCategorias(cats ?? [])
       setProductos(prods ?? [])
+      setCombos((combosData ?? []) as Combo[])
       setLoading(false)
     })
 
@@ -232,6 +237,66 @@ export default function DeliveryPublicoPage() {
       {/* MENÚ */}
       {paso === 'menu' && (
         <div className="max-w-lg mx-auto px-4 py-5 space-y-3 pb-32">
+          {/* Combos */}
+          {catSelec === 'todos' && combos.length > 0 && (
+            <div className="space-y-3 mb-2">
+              <h2 className="text-xs font-semibold text-orange-500 uppercase tracking-widest">🎁 Combos y Promos</h2>
+              {combos.map((combo) => {
+                const enCarrito = carrito.find((i) => i.producto_id === combo.id && i.tipo === 'combo')
+                const partes = combo.combo_items.map((ci) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean).join(' + ')
+                return (
+                  <div key={combo.id} className="flex gap-3 bg-[#181818] border border-orange-900/40 rounded-2xl overflow-hidden">
+                    <div className="relative w-[90px] flex-shrink-0 bg-[#252525] min-h-[90px]">
+                      {combo.imagen_url
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        ? <img src={combo.imagen_url} alt={combo.nombre} className="w-full h-full object-cover absolute inset-0" />
+                        : <div className="w-full h-full flex items-center justify-center text-3xl opacity-30">🎁</div>
+                      }
+                      <div className="absolute top-1.5 left-1.5 bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">COMBO</div>
+                    </div>
+                    <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-white leading-tight">{combo.nombre}</p>
+                        {partes && <p className="text-xs text-orange-400/70 mt-0.5">{partes}</p>}
+                        {combo.descripcion && <p className="text-xs text-[#777] mt-0.5 line-clamp-2">{combo.descripcion}</p>}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-base font-bold text-orange-500">${combo.precio.toLocaleString()}</p>
+                        {enCarrito ? (
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => {
+                              setCarrito((prev) => {
+                                const idx = prev.findIndex((i) => i.producto_id === combo.id && i.tipo === 'combo')
+                                if (idx < 0) return prev
+                                const next = [...prev]
+                                if (next[idx].cantidad <= 1) return next.filter((_, i) => i !== idx)
+                                next[idx] = { ...next[idx], cantidad: next[idx].cantidad - 1, subtotal: combo.precio * (next[idx].cantidad - 1) }
+                                return next
+                              })
+                            }} className="w-7 h-7 rounded-lg bg-[#252525] hover:bg-[#333] text-white flex items-center justify-center text-base font-bold transition">−</button>
+                            <span className="text-sm font-bold text-white w-4 text-center">{enCarrito.cantidad}</span>
+                            <button onClick={() => {
+                              setCarrito((prev) => {
+                                const idx = prev.findIndex((i) => i.producto_id === combo.id && i.tipo === 'combo')
+                                if (idx >= 0) { const next = [...prev]; next[idx] = { ...next[idx], cantidad: next[idx].cantidad + 1, subtotal: combo.precio * (next[idx].cantidad + 1) }; return next }
+                                return [...prev, { producto_id: combo.id, nombre: combo.nombre, precio: combo.precio, cantidad: 1, subtotal: combo.precio, observacion: '', tipo: 'combo' }]
+                              })
+                            }} className="w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-400 text-white flex items-center justify-center text-base font-bold transition">+</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setCarrito((prev) => [...prev, { producto_id: combo.id, nombre: combo.nombre, precio: combo.precio, cantidad: 1, subtotal: combo.precio, observacion: '', tipo: 'combo' }])}
+                            className="bg-orange-500 hover:bg-orange-400 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition">
+                            + Agregar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           {prodsMostrados.map((p) => {
             const item = carrito.find((i) => i.producto_id === p.id)
             return (

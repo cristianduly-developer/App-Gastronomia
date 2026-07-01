@@ -57,7 +57,7 @@ export default function MenuMesaPage() {
       supabaseAnon.from('mesas').select('nombre').eq('id', mesaId).single(),
       supabaseAnon.from('categorias').select('*').eq('local_id', localId).eq('activo', true).order('nombre'),
       supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre'),
-      supabaseAnon.from('combos').select('id, nombre, descripcion, precio, imagen_url, combo_items(producto_id, cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).order('nombre'),
+      supabaseAnon.from('combos').select('id, nombre, descripcion, precio, imagen_url, combo_items(producto_id, cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).eq('aplica_mesas', true).order('nombre'),
     ]).then(([{ data: cfg }, { data: mesa }, { data: cats }, { data: prods }, { data: combosData }]) => {
       if (!cfg || !mesa) { setError('Menú no encontrado'); setLoading(false); return }
       setConfig(cfg)

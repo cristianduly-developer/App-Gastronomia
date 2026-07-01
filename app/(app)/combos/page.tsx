@@ -10,6 +10,7 @@ interface ComboItem { producto_id: string; cantidad: number; nombre?: string }
 interface Combo {
   id: string; nombre: string; descripcion: string | null
   precio: number; activo: boolean; imagen_url: string | null
+  aplica_mesas: boolean; aplica_delivery: boolean
   combo_items: ComboItem[]
 }
 
@@ -21,7 +22,7 @@ export default function CombosPage() {
 
   const [modal, setModal] = useState(false)
   const [editCombo, setEditCombo] = useState<Combo | null>(null)
-  const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '' })
+  const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '', aplica_mesas: true, aplica_delivery: true })
   const [items, setItems] = useState<ComboItem[]>([{ producto_id: '', cantidad: 1 }])
   const [guardando, setGuardando] = useState(false)
 
@@ -34,7 +35,7 @@ export default function CombosPage() {
     const [{ data: combosData }, { data: prodsData }] = await Promise.all([
       supabaseApp
         .from('combos')
-        .select('id, nombre, descripcion, precio, activo, imagen_url, combo_items(producto_id, cantidad)')
+        .select('id, nombre, descripcion, precio, activo, imagen_url, aplica_mesas, aplica_delivery, combo_items(producto_id, cantidad)')
         .eq('local_id', localId)
         .order('nombre'),
       supabaseApp
@@ -51,14 +52,14 @@ export default function CombosPage() {
 
   const abrirNuevo = () => {
     setEditCombo(null)
-    setForm({ nombre: '', descripcion: '', precio: '' })
+    setForm({ nombre: '', descripcion: '', precio: '', aplica_mesas: true, aplica_delivery: true })
     setItems([{ producto_id: '', cantidad: 1 }])
     setModal(true)
   }
 
   const abrirEditar = (c: Combo) => {
     setEditCombo(c)
-    setForm({ nombre: c.nombre, descripcion: c.descripcion ?? '', precio: String(c.precio) })
+    setForm({ nombre: c.nombre, descripcion: c.descripcion ?? '', precio: String(c.precio), aplica_mesas: c.aplica_mesas, aplica_delivery: c.aplica_delivery })
     setItems(c.combo_items.length > 0 ? c.combo_items : [{ producto_id: '', cantidad: 1 }])
     setModal(true)
   }
@@ -83,6 +84,8 @@ export default function CombosPage() {
       descripcion: form.descripcion.trim() || null,
       precio: Number(form.precio),
       activo: true,
+      aplica_mesas: form.aplica_mesas,
+      aplica_delivery: form.aplica_delivery,
     }
 
     if (editCombo) {
@@ -177,6 +180,10 @@ export default function CombosPage() {
                     {nombresItems.map((n, i) => (
                       <span key={i} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-lg">{n}</span>
                     ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    {c.aplica_mesas && <span className="text-[10px] bg-violet-900/60 text-violet-300 border border-violet-800 px-2 py-0.5 rounded-md">🪑 Mesas</span>}
+                    {c.aplica_delivery && <span className="text-[10px] bg-orange-900/60 text-orange-300 border border-orange-800 px-2 py-0.5 rounded-md">🛵 Delivery</span>}
                   </div>
                   <div className="flex items-center gap-2 pt-1">
                     <button onClick={() => abrirEditar(c)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium py-2 rounded-xl transition">
@@ -281,9 +288,25 @@ export default function CombosPage() {
                 )}
               </div>
 
+              <div>
+                <label className="text-xs text-gray-400 mb-2 block">Disponible en</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.aplica_mesas} onChange={(e) => setForm((f) => ({ ...f, aplica_mesas: e.target.checked }))}
+                      className="w-4 h-4 rounded accent-violet-500" />
+                    <span className="text-sm text-gray-300">🪑 Mesas / QR</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.aplica_delivery} onChange={(e) => setForm((f) => ({ ...f, aplica_delivery: e.target.checked }))}
+                      className="w-4 h-4 rounded accent-orange-500" />
+                    <span className="text-sm text-gray-300">🛵 Delivery</span>
+                  </label>
+                </div>
+              </div>
+
               <button
                 onClick={guardar}
-                disabled={guardando || !form.nombre || !form.precio || items.some((i) => !i.producto_id)}
+                disabled={guardando || !form.nombre || !form.precio || items.some((i) => !i.producto_id) || (!form.aplica_mesas && !form.aplica_delivery)}
                 className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white font-semibold py-3 rounded-xl transition"
               >
                 {guardando ? 'Guardando...' : editCombo ? 'Guardar cambios' : 'Crear combo'}
