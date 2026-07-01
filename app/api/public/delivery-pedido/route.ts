@@ -50,14 +50,20 @@ export async function POST(req: NextRequest) {
   const comboIds = itemsCombo.map((i: any) => i.producto_id).filter(Boolean)
   const comboPrecioMap: Record<string, number> = {}
 
+  const comboDetalleMap: Record<string, string> = {}
+
   if (comboIds.length > 0) {
     const { data: combosDB } = await supabaseAdmin
       .from('combos')
-      .select('id, precio')
+      .select('id, precio, combo_items(cantidad, productos(nombre))')
       .eq('local_id', localId)
       .in('id', comboIds)
 
-    for (const c of combosDB ?? []) comboPrecioMap[c.id] = c.precio
+    for (const c of combosDB ?? []) {
+      comboPrecioMap[c.id] = c.precio
+      const lineas = (c.combo_items ?? []).map((ci: any) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean)
+      comboDetalleMap[c.id] = lineas.join('\n')
+    }
   }
 
   const getPrecio = (i: any) => i.tipo === 'combo' ? (comboPrecioMap[i.producto_id] ?? 0) : (precioMap[i.producto_id] ?? 0)
@@ -86,15 +92,18 @@ export async function POST(req: NextRequest) {
   const { error: itemsError } = await supabaseAdmin.from('items_pedido_delivery').insert(
     carrito.map((i: any) => {
       const precio = getPrecio(i)
+      const esCombo = i.tipo === 'combo'
       return {
         pedido_delivery_id: pedido.id,
-        producto_id: i.tipo === 'combo' ? null : i.producto_id,
+        producto_id: esCombo ? null : i.producto_id,
         nombre: i.nombre,
         precio,
         precio_unitario: precio,
         cantidad: i.cantidad,
         subtotal: precio * i.cantidad,
         observacion: i.observacion ?? null,
+        tipo: esCombo ? 'combo' : 'producto',
+        combo_detalle: esCombo ? (comboDetalleMap[i.producto_id] ?? null) : null,
       }
     })
   )

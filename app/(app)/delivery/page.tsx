@@ -7,7 +7,7 @@ import { useSession } from '@/lib/sessionStore'
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string }
 interface Categoria { id: string; nombre: string }
-interface ComboBackoffice { id: string; nombre: string; precio: number }
+interface ComboBackoffice { id: string; nombre: string; precio: number; combo_items?: { cantidad: number; productos: { nombre: string } | null }[] }
 
 interface ItemForm { producto_id: string; nombre: string; precio: number; cantidad: number; subtotal: number; observacion: string; tipo?: 'producto' | 'combo' }
 
@@ -173,7 +173,7 @@ export default function DeliveryPage() {
     const [{ data: cats }, { data: prods }, { data: combosData }] = await Promise.all([
       supabaseApp.from('categorias').select('id, nombre').eq('local_id', localId).eq('activo', true).order('orden'),
       supabaseApp.from('productos').select('id, nombre, precio, categoria_id').eq('local_id', localId).eq('activo', true).order('nombre'),
-      supabaseApp.from('combos').select('id, nombre, precio').eq('local_id', localId).eq('activo', true).eq('aplica_delivery', true).order('nombre'),
+      supabaseApp.from('combos').select('id, nombre, precio, combo_items(cantidad, productos(nombre))').eq('local_id', localId).eq('activo', true).eq('aplica_delivery', true).order('nombre'),
     ])
     setCategorias(cats ?? [])
     setProductos(prods ?? [])
@@ -238,16 +238,25 @@ export default function DeliveryPage() {
     }
 
     const { error: errorItems } = await supabaseApp.from('items_pedido_delivery').insert(
-      items.map((i) => ({
-        pedido_delivery_id: pedido.id,
-        producto_id: i.tipo === 'combo' ? null : i.producto_id,
-        nombre: i.nombre,
-        precio: i.precio,
-        precio_unitario: i.precio,
-        cantidad: i.cantidad,
-        subtotal: i.subtotal,
-        observacion: i.observacion || null,
-      }))
+      items.map((i) => {
+        const esCombo = i.tipo === 'combo'
+        const comboInfo = esCombo ? combosBackoffice.find((c) => c.id === i.producto_id) : null
+        const comboDetalle = comboInfo?.combo_items
+          ? comboInfo.combo_items.map((ci: any) => `${ci.cantidad}x ${ci.productos?.nombre ?? ''}`).filter(Boolean).join('\n')
+          : null
+        return {
+          pedido_delivery_id: pedido.id,
+          producto_id: esCombo ? null : i.producto_id,
+          nombre: i.nombre,
+          precio: i.precio,
+          precio_unitario: i.precio,
+          cantidad: i.cantidad,
+          subtotal: i.subtotal,
+          observacion: i.observacion || null,
+          tipo: esCombo ? 'combo' : 'producto',
+          combo_detalle: comboDetalle,
+        }
+      })
     )
 
     if (errorItems) {

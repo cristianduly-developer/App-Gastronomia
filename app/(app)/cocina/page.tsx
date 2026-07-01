@@ -161,9 +161,10 @@ export default function CocinaPage() {
         .order('created_at'),
       supabaseApp
         .from('items_pedido_delivery')
-        .select(`id, nombre, cantidad, observacion, created_at, pedido_delivery_id, pedidos_delivery!inner ( local_id, cliente_nombre, estado )`)
+        .select(`id, nombre, cantidad, observacion, estado, combo_detalle, created_at, pedido_delivery_id, pedidos_delivery!inner ( local_id, cliente_nombre, estado )`)
         .eq('pedidos_delivery.local_id', localId)
         .eq('pedidos_delivery.estado', 'en_cocina')
+        .neq('estado', 'entregado')
         .order('created_at'),
     ])
 
@@ -187,13 +188,14 @@ export default function CocinaPage() {
       nombre: i.nombre,
       cantidad: i.cantidad,
       observacion: i.observacion,
-      estado: estadosDeliveryLocal.get(i.id) ?? 'pendiente' as const,
+      estado: (i.estado ?? 'pendiente') as ItemCocina['estado'],
       tanda: 1,
       created_at: i.created_at,
       comanda_id: '',
       mesa_nombre: i.pedidos_delivery?.cliente_nombre ?? 'Delivery',
       origen: 'delivery' as const,
       pedido_delivery_id: i.pedido_delivery_id,
+      combo_detalle: i.combo_detalle ?? null,
     }))
 
     const merged = [...deMesa, ...deDelivery].sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -233,6 +235,7 @@ export default function CocinaPage() {
     setCambiando((s) => new Set(s).add(item.id))
 
     if (item.origen === 'delivery') {
+      await supabaseApp.from('items_pedido_delivery').update({ estado: nuevoEstado }).eq('id', item.id)
       if (nuevoEstado === 'entregado' || nuevoEstado === 'listo') {
         setItems((prev) => { const r = prev.filter((i) => i.id !== item.id); itemsRef.current = r; return r })
       } else {
