@@ -177,7 +177,7 @@ export default function DeliveryPage() {
     ])
     setCategorias(cats ?? [])
     setProductos(prods ?? [])
-    setPromosBackoffice(combosData ?? [])
+    setPromosBackoffice((combosData ?? []) as unknown as ComboBackoffice[])
     setCatSelec(combosData?.length ? 'combos' : (cats?.[0]?.id ?? ''))
     setItems([])
     setCliente({ nombre: '', tel: '', dir: '', obs: '' })
