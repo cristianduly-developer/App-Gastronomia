@@ -76,6 +76,11 @@ export default function PedidosQRPage() {
   }, [localId, cargar])
 
   const aceptar = async (pedido: PedidoQR) => {
+    // Chequeo anti-duplicado: si otra sesión ya lo aceptó, salir
+    const { data: estadoActual } = await supabaseApp
+      .from('pedidos_qr').select('estado').eq('id', pedido.id).single()
+    if (!estadoActual || estadoActual.estado !== 'pendiente') return
+
     setProcesando((s) => new Set(s).add(pedido.id))
 
     // 1. Buscar comanda abierta de esa mesa o crear una nueva
