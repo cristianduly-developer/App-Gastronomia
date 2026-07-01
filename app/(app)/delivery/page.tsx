@@ -115,7 +115,7 @@ export default function DeliveryPage() {
   const confirmarCobro = async () => {
     if (!modalCobro) return
     setAvanzando((s) => new Set(s).add(modalCobro.id))
-    await Promise.all([
+    const [{ error: errPedido }, { error: errVenta }] = await Promise.all([
       supabaseApp.from('pedidos_delivery').update({ estado: 'entregado', metodo_pago: metodoCobro }).eq('id', modalCobro.id),
       supabaseApp.from('ventas').insert({
         local_id: localId,
@@ -125,6 +125,8 @@ export default function DeliveryPage() {
         referencia_id: modalCobro.id,
       }),
     ])
+    if (errPedido) console.error('Error actualizando pedido:', errPedido)
+    if (errVenta) console.error('Error insertando venta:', errVenta)
     setAvanzando((s) => { const n = new Set(s); n.delete(modalCobro.id); return n })
     setModalCobro(null)
     cargar()
