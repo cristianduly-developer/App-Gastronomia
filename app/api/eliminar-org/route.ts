@@ -26,23 +26,35 @@ export async function POST(req: NextRequest) {
 
     const uid = user.id
 
-    await supa.from('combo_items').delete().eq('user_id', uid)
-    await supa.from('combos').delete().eq('user_id', uid)
-    await supa.from('items_comanda').delete().eq('user_id', uid)
-    await supa.from('comandas').delete().eq('user_id', uid)
-    await supa.from('items_venta').delete().eq('user_id', uid)
-    await supa.from('ventas').delete().eq('user_id', uid)
-    await supa.from('items_pedido_delivery').delete().eq('user_id', uid)
-    await supa.from('pedidos_delivery').delete().eq('user_id', uid)
-    await supa.from('pedidos_qr').delete().eq('user_id', uid)
-    await supa.from('caja').delete().eq('user_id', uid)
-    await supa.from('gastos_caja').delete().eq('user_id', uid)
-    await supa.from('mesas').delete().eq('user_id', uid)
-    await supa.from('colaboradores').delete().eq('user_id', uid)
-    await supa.from('sectores').delete().eq('user_id', uid)
-    await supa.from('productos').delete().eq('user_id', uid)
-    await supa.from('categorias').delete().eq('user_id', uid)
-    await supa.from('config_local').delete().eq('user_id', uid)
+    // Gastro usa local_id = auth user id como tenant
+    // items_comanda y items_venta van por comanda_id/venta_id
+    const { data: comandas } = await supa.from('comandas').select('id').eq('local_id', uid)
+    const comandaIds = comandas?.map((c: any) => c.id) || []
+    if (comandaIds.length) await supa.from('items_comanda').delete().in('comanda_id', comandaIds)
+
+    const { data: ventas } = await supa.from('ventas').select('id').eq('local_id', uid)
+    const ventaIds = ventas?.map((v: any) => v.id) || []
+    if (ventaIds.length) await supa.from('items_venta').delete().in('venta_id', ventaIds)
+
+    const { data: combos } = await supa.from('combos').select('id').eq('local_id', uid)
+    const comboIds = combos?.map((c: any) => c.id) || []
+    if (comboIds.length) await supa.from('combo_items').delete().in('combo_id', comboIds)
+
+    await supa.from('comandas').delete().eq('local_id', uid)
+    await supa.from('ventas').delete().eq('local_id', uid)
+    await supa.from('items_pedido_delivery').delete().eq('local_id', uid)
+    await supa.from('pedidos_delivery').delete().eq('local_id', uid)
+    await supa.from('pedidos_qr').delete().eq('local_id', uid)
+    await supa.from('caja').delete().eq('local_id', uid)
+    await supa.from('gastos_caja').delete().eq('local_id', uid)
+    await supa.from('combos').delete().eq('local_id', uid)
+    await supa.from('mesas').delete().eq('local_id', uid)
+    await supa.from('colaboradores').delete().eq('local_id', uid)
+    await supa.from('sectores').delete().eq('local_id', uid)
+    await supa.from('clientes').delete().eq('local_id', uid)
+    await supa.from('productos').delete().eq('local_id', uid)
+    await supa.from('categorias').delete().eq('local_id', uid)
+    await supa.from('config_local').delete().eq('local_id', uid)
 
     await supa.auth.admin.deleteUser(uid)
     return NextResponse.json({ ok: true })
