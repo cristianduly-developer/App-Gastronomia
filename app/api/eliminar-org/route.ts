@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
 
     const uid = user.id
 
+    await supa.from('combo_items').delete().eq('user_id', uid)
+    await supa.from('combos').delete().eq('user_id', uid)
     await supa.from('items_comanda').delete().eq('user_id', uid)
     await supa.from('comandas').delete().eq('user_id', uid)
     await supa.from('items_venta').delete().eq('user_id', uid)
