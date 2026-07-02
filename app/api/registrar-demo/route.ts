@@ -56,6 +56,14 @@ export async function POST(req: NextRequest) {
     app_id: APP_ID,
   }).then(() => {})
 
+  central.from('eventos_suscripcion').insert({
+    org_id: orgId,
+    app_id: APP_ID,
+    tipo: 'nueva_suscripcion',
+    descripcion: `Nueva demo — ${nombre} (${email})`,
+    plan: 'profesional',
+  }).then(() => {})
+
   // Crear config_local en la app para que el onboarding funcione
   const { error: configErr } = await supabaseAdmin
     .from('config_local')
