@@ -42,7 +42,10 @@ export async function POST(req: NextRequest) {
 
     await supa.from('comandas').delete().eq('local_id', uid)
     await supa.from('ventas').delete().eq('local_id', uid)
-    await supa.from('items_pedido_delivery').delete().eq('local_id', uid)
+    const { data: pedidosDelivery } = await supa.from('pedidos_delivery').select('id').eq('local_id', uid)
+    const pedidoDeliveryIds = pedidosDelivery?.map((p: any) => p.id) || []
+    if (pedidoDeliveryIds.length) await supa.from('items_pedido_delivery').delete().in('pedido_delivery_id', pedidoDeliveryIds)
+
     await supa.from('pedidos_delivery').delete().eq('local_id', uid)
     await supa.from('pedidos_qr').delete().eq('local_id', uid)
     await supa.from('caja').delete().eq('local_id', uid)
