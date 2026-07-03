@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+
+async function findUserByEmail(supa: SupabaseClient, email?: string) {
+  const target = email?.toLowerCase()
+  if (!target) return null
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supa.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) return null
+    const found = data.users.find((u) => u.email?.toLowerCase() === target)
+    if (found) return found
+    if (data.users.length < 1000) break
+  }
+  return null
+}
 
 export async function POST(req: NextRequest) {
   const appKey = req.headers.get('x-app-key')
@@ -20,8 +33,7 @@ export async function POST(req: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    const { data: { users } } = await supa.auth.admin.listUsers()
-    const user = users?.find((u: { email?: string }) => u.email?.toLowerCase() === org.email_contacto?.toLowerCase())
+    const user = await findUserByEmail(supa, org.email_contacto)
     if (!user) return NextResponse.json({ ok: true, msg: 'usuario no encontrado' })
 
     const uid = user.id

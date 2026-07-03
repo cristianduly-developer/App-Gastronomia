@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { verificarAcceso } from '@/lib/supabaseCentral'
 import { createClient } from '@supabase/supabase-js'
 
 const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!)
@@ -11,11 +12,17 @@ export async function POST(req: NextRequest) {
   }
   const token = authHeader.slice(7)
   const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
-  if (authErr || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  if (authErr || !user?.email) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const { nombre, email, rol, localId, mesasAsignadas } = await req.json()
   if (!nombre || !email || !localId) {
     return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
+  }
+
+  // El que agrega colaboradores tiene que ser el dueño de ese local
+  const acceso = await verificarAcceso(user.email.toLowerCase())
+  if (!acceso?.tiene_acceso || acceso.ret_org_id !== localId) {
+    return NextResponse.json({ error: 'No autorizado sobre este local' }, { status: 403 })
   }
 
   const emailLower = email.trim().toLowerCase()

@@ -18,32 +18,21 @@ export async function POST(req: NextRequest) {
   const { plan } = await req.json()
   if (!plan) return NextResponse.json({ error: 'plan requerido' }, { status: 400 })
 
-  const { data: sub } = await central
-    .from('suscripciones_apps')
+  // Resolver la org del usuario autenticado (nunca tomar una org arbitraria)
+  const { data: emp } = await central
+    .from('empleados_organizacion')
     .select('org_id')
-    .eq('app_id', 'app-gastronomia')
-    .in('estado', ['activo', 'demo', 'impago', 'suspendido', 'cancelado'])
+    .eq('email', user.email.toLowerCase())
     .limit(1)
     .maybeSingle()
-
-  // Buscar org_id por email en empleados
-  let orgId = sub?.org_id
-  if (!orgId) {
-    const { data: emp } = await central
-      .from('empleados_organizacion')
-      .select('org_id')
-      .eq('email', user.email.toLowerCase())
-      .limit(1)
-      .maybeSingle()
-    orgId = emp?.org_id
-  }
+  const orgId = emp?.org_id
 
   if (!orgId) return NextResponse.json({ error: 'No se encontró tu organización.' }, { status: 404 })
 
   try {
     const r = await fetch(`${SAAS_URL}/api/mp-crear-suscripcion`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.ERROR_REPORT_KEY || '' },
       body: JSON.stringify({ org_id: orgId, app_id: 'app-gastronomia', plan }),
     })
     return NextResponse.json(await r.json(), { status: r.status })

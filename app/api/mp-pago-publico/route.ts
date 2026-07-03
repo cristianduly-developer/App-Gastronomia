@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const r = await fetch(`${SAAS_URL}/api/mp-crear-suscripcion`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.ERROR_REPORT_KEY || '' },
       body: JSON.stringify({ org_id, app_id: 'app-gastronomia', plan }),
     })
     return NextResponse.json(await r.json(), { status: r.status })
