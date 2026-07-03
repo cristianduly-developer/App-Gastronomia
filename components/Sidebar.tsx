@@ -9,6 +9,7 @@ import { DemoBanner } from './DemoBanner'
 import { usePedidosQR } from '@/context/AppRealtimeContext'
 import { usePedidosDelivery } from '@/context/AppRealtimeContext'
 import { useAppUpdate } from '@/hooks/useAppUpdate'
+import { usePlan } from '@/hooks/usePlan'
 
 const NAV_ITEMS = [
   { href: '/dashboard',     label: 'Dashboard',      emoji: '📊', permiso: 'verDashboard',    config: null },
@@ -30,7 +31,12 @@ export function Sidebar() {
   const pathname = usePathname()
   const { nombreNegocio, rolSistema, usaMesas, usaDelivery, usaCocina, usaQr } = useSession()
   const permisos = usePermisos()
+  const limites = usePlan()
   const configFlags: Record<string, boolean> = { usaMesas, usaDelivery, usaCocina, usaQr }
+  // El menú muestra una función solo si el negocio la activó (config) Y el plan la incluye
+  const PLAN_KEY: Record<string, keyof typeof limites> = {
+    usaMesas: 'usaMesas', usaCocina: 'usaCocina', usaDelivery: 'usaDelivery', usaQr: 'usaQrPedido',
+  }
   const { total: pedidosPendientes } = usePedidosQR()
   const { totalPendientes: deliveryPendientes } = usePedidosDelivery()
 
@@ -43,7 +49,7 @@ export function Sidebar() {
 
   const items = NAV_ITEMS.filter((item) =>
     permisos[item.permiso as keyof typeof permisos] &&
-    (item.config === null || configFlags[item.config])
+    (item.config === null || (configFlags[item.config] && limites[PLAN_KEY[item.config]]))
   )
 
   return (
