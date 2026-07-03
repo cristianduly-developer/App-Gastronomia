@@ -4,6 +4,7 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 import { getLimites } from '@/lib/planLimits'
+import { mensajeErrorGuardado } from '@/lib/errores'
 
 interface Categoria { id: string; nombre: string; orden: number }
 interface Producto {
@@ -102,11 +103,11 @@ export default function ProductosPage() {
 
     if (editProd) {
       const { error } = await supabaseApp.from('productos').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editProd.id)
-      if (error) { alert('Error al guardar: ' + error.message); setGuardandoProd(false); return }
+      if (error) { alert(mensajeErrorGuardado(error) || ('Error al guardar: ' + error.message)); setGuardandoProd(false); return }
       prodId = editProd.id
     } else {
       const { data, error } = await supabaseApp.from('productos').insert(payload).select('id').single()
-      if (error) { alert(error.message.includes('límite') ? error.message : 'Error al agregar el producto'); setGuardandoProd(false); return }
+      if (error) { alert(error.message.includes('límite') ? error.message : (mensajeErrorGuardado(error) || 'Error al agregar el producto')); setGuardandoProd(false); return }
       prodId = data.id
     }
 

@@ -5,6 +5,7 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 import { usePlan } from '@/hooks/usePlan'
+import { mensajeErrorGuardado } from '@/lib/errores'
 
 interface Config {
   nombre_negocio: string
@@ -77,7 +78,7 @@ export default function ConfiguracionPage() {
   const guardar = async () => {
     if (!form || !localId) return
     setGuardando(true)
-    await supabaseApp.from('config_local').update({
+    const { error: guardarError } = await supabaseApp.from('config_local').update({
       nombre_negocio: form.nombre_negocio,
       tipo_negocio:   form.tipo_negocio,
       telefono:       form.telefono,
@@ -90,6 +91,11 @@ export default function ConfiguracionPage() {
       tiempo_entrega_estimado: form.tiempo_entrega_estimado || null,
       logo_url:                form.logo_url,
     }).eq('local_id', localId)
+    if (guardarError) {
+      setGuardando(false)
+      alert(mensajeErrorGuardado(guardarError) || 'Error al guardar la configuración. Intentá de nuevo.')
+      return
+    }
     setConfig(form)
     setSession({
       nombreNegocio: form.nombre_negocio,

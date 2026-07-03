@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { mensajeErrorGuardado } from '@/lib/errores'
 
 interface Caja {
   id: string
@@ -91,7 +92,7 @@ export default function CajaPage() {
         monto_apertura: Number(montoApertura),
       })
       if (error) {
-        alert(error.code === '23505' ? 'Ya hay una caja abierta' : 'Error al abrir la caja')
+        alert(error.code === '23505' ? 'Ya hay una caja abierta' : (mensajeErrorGuardado(error) || 'Error al abrir la caja'))
         return
       }
       setMontoApertura('')
@@ -113,7 +114,7 @@ export default function CajaPage() {
         diferencia,
         notas_cierre: notasCierre || null,
       }).eq('id', cajaActual.id).eq('estado', 'abierta')
-      if (error) { alert('Error al cerrar la caja'); return }
+      if (error) { alert(mensajeErrorGuardado(error) || 'Error al cerrar la caja'); return }
       router.refresh()
       setMontoCierre('')
       setNotasCierre('')

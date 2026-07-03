@@ -4,6 +4,7 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { mensajeErrorGuardado } from '@/lib/errores'
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string }
 interface Categoria { id: string; nombre: string }
@@ -232,7 +233,7 @@ export default function DeliveryPage() {
     }).select().single()
 
     if (error || !pedido) {
-      alert(`Error al guardar el pedido: ${error?.message ?? 'sin respuesta'}`)
+      alert(mensajeErrorGuardado(error) || `Error al guardar el pedido: ${error?.message ?? 'sin respuesta'}`)
       setGuardando(false)
       return
     }
@@ -260,7 +261,7 @@ export default function DeliveryPage() {
     )
 
     if (errorItems) {
-      alert(`Error al guardar los items: ${errorItems.message}`)
+      alert(mensajeErrorGuardado(errorItems) || `Error al guardar los items: ${errorItems.message}`)
     }
 
     // Guardar/actualizar cliente

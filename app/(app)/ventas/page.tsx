@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs'
 import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { mensajeErrorGuardado } from '@/lib/errores'
 
 interface Producto {
   id: string
@@ -140,7 +141,7 @@ export default function VentasPage() {
 
     if (ventaError || !venta) {
       setCobrando(false)
-      alert('Error al registrar la venta. Intentá de nuevo.')
+      alert(mensajeErrorGuardado(ventaError) || 'Error al registrar la venta. Intentá de nuevo.')
       return
     }
 
