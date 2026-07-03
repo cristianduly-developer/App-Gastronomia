@@ -3,6 +3,20 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { verificarAcceso } from '@/lib/supabaseCentral'
 import { createClient } from '@supabase/supabase-js'
 
+// Espejo de acceso/plan por tenant (items 8+9). valid_until = vencimiento + gracia.
+// Se refresca en cada login del dueño. try/catch: si la tabla aún no existe, no rompe el login.
+const GRACE_DAYS = 7
+async function syncTenantAccess(localId: string, plan: string | null, diasRestantes: number | null) {
+  try {
+    const dias = (diasRestantes ?? 3650) + GRACE_DAYS
+    const validUntil = new Date(Date.now() + dias * 86400000).toISOString()
+    await supabaseAdmin.from('tenant_access').upsert(
+      { tenant_id: localId, plan: plan ?? 'basico', valid_until: validUntil },
+      { onConflict: 'tenant_id' }
+    )
+  } catch { /* tabla aún no creada: ignorar */ }
+}
+
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get('email')
   if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 })
@@ -62,6 +76,7 @@ export async function GET(req: NextRequest) {
     // Actualizar ultimo_acceso
     const centralPing = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } })
     centralPing.from('suscripciones_apps').update({ ultimo_acceso: new Date().toISOString() }).eq('org_id', acceso.ret_org_id).eq('app_id', 'app-gastronomia').then(() => {})
+    await syncTenantAccess(acceso.ret_org_id, acceso.plan, acceso.dias_restantes)
     return NextResponse.json({ esColab: false, acceso })
   }
 
@@ -124,6 +139,7 @@ export async function POST(req: NextRequest) {
     const orgId = acceso.ret_org_id ?? (acceso as any).org_id
     central.rpc('incrementar_sesion', { p_org_id: orgId, p_app_id: 'app-gastronomia' })
       .then(({ error }) => { if (error) console.error('[verificar-acceso POST] incrementar_sesion error:', error) })
+    await syncTenantAccess(orgId, acceso.plan, acceso.dias_restantes)
     return NextResponse.json({ esColab: false, acceso })
   }
 
