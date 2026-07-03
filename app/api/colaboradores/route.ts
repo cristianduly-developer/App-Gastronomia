@@ -37,6 +37,18 @@ export async function POST(req: NextRequest) {
 
   if (existe) return NextResponse.json({ error: 'Ese email ya está registrado como colaborador' }, { status: 409 })
 
+  // Límite de colaboradores por plan (plan real desde la central, no del cliente)
+  const LIMITES_COLAB: Record<string, number> = { basico: 1, profesional: 3, premium: 6, sincargo: 6 }
+  const limite = LIMITES_COLAB[acceso.plan] ?? 1
+  const { count } = await supabaseAdmin
+    .from('colaboradores')
+    .select('id', { count: 'exact', head: true })
+    .eq('local_id', localId)
+    .eq('activo', true)
+  if ((count ?? 0) >= limite) {
+    return NextResponse.json({ error: `Tu plan permite hasta ${limite} colaborador${limite === 1 ? '' : 'es'}. Actualizá el plan para agregar más.` }, { status: 403 })
+  }
+
   // Insertar en DB local
   const { error: localErr } = await supabaseAdmin.from('colaboradores').insert({
     local_id: localId,
