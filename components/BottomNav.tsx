@@ -102,15 +102,13 @@ export function BottomNav() {
             )
           })}
 
-          {resto.length > 0 && (
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500"
-            >
-              <span className="text-xl leading-none">☰</span>
-              <span className="text-[10px] font-medium leading-none">Más</span>
-            </button>
-          )}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500"
+          >
+            <span className="text-xl leading-none">☰</span>
+            <span className="text-[10px] font-medium leading-none">Más</span>
+          </button>
         </div>
       </nav>
 
