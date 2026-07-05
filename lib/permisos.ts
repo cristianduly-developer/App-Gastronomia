@@ -39,7 +39,7 @@ const PERMISOS_POR_ROL: Record<RolSistema, Permisos> = {
     verVentas: true,
     crearVentas: true,
     verMesas: false,
-    verComandas: false,
+    verComandas: true,
     crearComandas: false,
     verCocina: false,
     verDelivery: true,
