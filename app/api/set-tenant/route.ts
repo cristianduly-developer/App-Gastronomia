@@ -33,7 +33,13 @@ export async function POST(req: NextRequest) {
   if (colab) {
     localId = colab.local_id
     isOwner = false
-    plan = 'basico'
+    // Leer el plan real del local desde tenant_access
+    const { data: ta } = await supabaseAdmin
+      .from('tenant_access')
+      .select('plan')
+      .eq('org_id', localId)
+      .maybeSingle()
+    plan = ta?.plan ?? 'basico'
   } else {
     const acceso = await verificarAcceso(email)
     if (acceso?.tiene_acceso) {
