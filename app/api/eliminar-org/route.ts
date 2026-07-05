@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { findUserByEmail } from '@solucionesmdp/core/auth'
+import { findUserByEmail } from '@solucionesmdp/core'
 
 export async function POST(req: NextRequest) {
   const appKey = req.headers.get('x-app-key')

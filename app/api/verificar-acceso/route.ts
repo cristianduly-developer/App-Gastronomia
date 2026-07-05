@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { verificarAcceso } from '@/lib/supabaseCentral'
 import { createClient } from '@supabase/supabase-js'
 
-import { syncTenantAccess } from '@solucionesmdp/core/tenant'
+import { syncTenantAccess } from '@solucionesmdp/core'
 
 export async function GET(req: NextRequest) {
   const email = req.nextUrl.searchParams.get('email')

@@ -1,1 +1,1 @@
-export { mensajeErrorGuardado } from '@solucionesmdp/core/errores'
+export { mensajeErrorGuardado } from '@solucionesmdp/core'
