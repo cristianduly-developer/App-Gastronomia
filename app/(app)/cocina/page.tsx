@@ -148,9 +148,16 @@ export default function CocinaPage() {
   const { activo: wakeLockActivo, activar: activarWakeLock, desactivar: desactivarWakeLock } = useWakeLock()
 
   const cargarItems = useCallback(async () => {
-    const estadosDeliveryLocal = new Map(
-      itemsRef.current.filter((i) => i.origen === 'delivery').map((i) => [i.id, i.estado])
-    )
+    // Pedidos delivery en cocina para este local
+    const { data: pedidosEnCocina } = await supabaseApp
+      .from('pedidos_delivery')
+      .select('id, cliente_nombre')
+      .eq('local_id', localId)
+      .eq('estado', 'en_cocina')
+
+    const pedidoIds = (pedidosEnCocina ?? []).map((p: any) => p.id)
+    const clienteMap: Record<string, string> = {}
+    ;(pedidosEnCocina ?? []).forEach((p: any) => { clienteMap[p.id] = p.cliente_nombre })
 
     const [{ data: itemsMesa }, { data: itemsDelivery }] = await Promise.all([
       supabaseApp
@@ -159,13 +166,14 @@ export default function CocinaPage() {
         .eq('comandas.local_id', localId)
         .in('estado', ['pendiente', 'en_preparacion', 'listo'])
         .order('created_at'),
-      supabaseApp
-        .from('items_pedido_delivery')
-        .select(`id, nombre, cantidad, observacion, estado, combo_detalle, created_at, pedido_delivery_id, pedidos_delivery!inner ( local_id, cliente_nombre, estado )`)
-        .eq('pedidos_delivery.local_id', localId)
-        .eq('pedidos_delivery.estado', 'en_cocina')
-        .neq('estado', 'entregado')
-        .order('created_at'),
+      pedidoIds.length > 0
+        ? supabaseApp
+            .from('items_pedido_delivery')
+            .select(`id, nombre, cantidad, observacion, estado, combo_detalle, created_at, pedido_delivery_id`)
+            .in('pedido_delivery_id', pedidoIds)
+            .neq('estado', 'entregado')
+            .order('created_at')
+        : Promise.resolve({ data: [] }),
     ])
 
     const deMesa: ItemCocina[] = (itemsMesa ?? []).map((i: any) => ({
@@ -192,7 +200,7 @@ export default function CocinaPage() {
       tanda: 1,
       created_at: i.created_at,
       comanda_id: '',
-      mesa_nombre: i.pedidos_delivery?.cliente_nombre ?? 'Delivery',
+      mesa_nombre: clienteMap[i.pedido_delivery_id] ?? 'Delivery',
       origen: 'delivery' as const,
       pedido_delivery_id: i.pedido_delivery_id,
       combo_detalle: i.combo_detalle ?? null,
