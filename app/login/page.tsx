@@ -304,6 +304,7 @@ export default function LoginPage() {
 
       if (config) {
         setSession({
+          onboardingCompleto: config.onboarding_completo ?? false,
           usaMesas:    config.usa_mesas    ?? false,
           usaDelivery: config.usa_delivery ?? false,
           usaCocina:   config.usa_cocina   ?? false,
@@ -311,10 +312,20 @@ export default function LoginPage() {
         })
       }
 
-      if (!config?.onboarding_completo) {
+      // Colaboradores: onboarding ya fue hecho por el owner, siempre permitir entrada
+      const onboardingOk = isOwner ? (config?.onboarding_completo ?? false) : true
+
+      if (!onboardingOk) {
         router.push('/onboarding')
       } else {
-        router.push('/dashboard')
+        // Redirigir según rol
+        const HOME_POR_ROL: Record<string, string> = {
+          cocina: '/cocina',
+          mozo:   '/mesas',
+          cajero: '/ventas',
+          owner:  '/dashboard',
+        }
+        router.push(HOME_POR_ROL[rolSistema] ?? '/dashboard')
       }
     } catch {
       setError('Error al verificar acceso. Intentá de nuevo.')
