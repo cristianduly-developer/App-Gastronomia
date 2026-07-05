@@ -29,10 +29,16 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
 
   if (colab) {
+    const { data: ta } = await supabaseAdmin
+      .from('tenant_access')
+      .select('plan')
+      .eq('org_id', colab.local_id)
+      .maybeSingle()
     return NextResponse.json({
       esColab: true,
       localId: colab.local_id,
       rol: colab.rol,
+      plan: ta?.plan ?? 'basico',
       mesasAsignadas: colab.mesas_asignadas ?? null,
     })
   }
@@ -117,7 +123,12 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   if (colab) {
-    return NextResponse.json({ esColab: true, localId: colab.local_id, rol: colab.rol, mesasAsignadas: colab.mesas_asignadas ?? null })
+    const { data: ta } = await supabaseAdmin
+      .from('tenant_access')
+      .select('plan')
+      .eq('org_id', colab.local_id)
+      .maybeSingle()
+    return NextResponse.json({ esColab: true, localId: colab.local_id, rol: colab.rol, plan: ta?.plan ?? 'basico', mesasAsignadas: colab.mesas_asignadas ?? null })
   }
 
   const acceso = await verificarAcceso(email)
