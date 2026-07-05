@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-
-async function findUserByEmail(supa: SupabaseClient, email?: string) {
-  const target = email?.toLowerCase()
-  if (!target) return null
-  for (let page = 1; page <= 20; page++) {
-    const { data, error } = await supa.auth.admin.listUsers({ page, perPage: 1000 })
-    if (error) return null
-    const found = data.users.find((u) => u.email?.toLowerCase() === target)
-    if (found) return found
-    if (data.users.length < 1000) break
-  }
-  return null
-}
+import { createClient } from '@supabase/supabase-js'
+import { findUserByEmail } from '@solucionesmdp/core/auth'
 
 export async function POST(req: NextRequest) {
   const appKey = req.headers.get('x-app-key')
