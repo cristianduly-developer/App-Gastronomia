@@ -26,9 +26,9 @@ export function useSessionGuard() {
       let isOwner: boolean = meta.is_owner ?? false
       let rolSistema: RolSistema = isOwner ? 'owner' : (meta.rol ?? 'cajero')
 
-      // Si no tiene local_id en app_metadata (colaboradores que ingresan con Google),
-      // consultamos via API con supabaseAdmin para bypassear RLS.
-      if (!localId) {
+      // Para colaboradores (no owners), siempre verificar local_id y rol desde DB
+      // ya que el JWT puede no tener rol o tenerlo desactualizado.
+      if (!isOwner) {
         const res = await fetch('/api/auth/session-colab', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         })
@@ -36,10 +36,9 @@ export function useSessionGuard() {
           const { colab } = await res.json()
           if (colab) {
             localId = colab.local_id
-            isOwner = false
             rolSistema = colab.rol as RolSistema
           } else {
-            // No es colaborador conocido — no puede entrar
+            // No está en colaboradores activos — no puede entrar
             clearSession()
             setHydrated()
             return
