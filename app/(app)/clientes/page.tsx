@@ -8,12 +8,13 @@ interface Cliente {
   id: string
   nombre: string
   telefono: string | null
+  direccion: string | null
   observaciones: string | null
   total_gastado?: number
   cantidad_compras?: number
 }
 
-const FORM_VACIO = { nombre: '', telefono: '', observaciones: '' }
+const FORM_VACIO = { nombre: '', telefono: '', direccion: '', observaciones: '' }
 
 export default function ClientesPage() {
   const { localId } = useSession()
@@ -46,6 +47,7 @@ export default function ClientesPage() {
       id: c.id,
       nombre: c.nombre,
       telefono: c.telefono,
+      direccion: c.direccion,
       observaciones: c.observaciones,
       cantidad_compras: c.ventas?.length ?? 0,
       total_gastado: c.ventas?.reduce((acc: number, v: any) => acc + (v.total ?? 0), 0) ?? 0,
@@ -63,7 +65,7 @@ export default function ClientesPage() {
 
   const abrirEditar = (c: Cliente) => {
     setEditando(c)
-    setForm({ nombre: c.nombre, telefono: c.telefono ?? '', observaciones: c.observaciones ?? '' })
+    setForm({ nombre: c.nombre, telefono: c.telefono ?? '', direccion: c.direccion ?? '', observaciones: c.observaciones ?? '' })
     setModal(true)
   }
 
@@ -74,6 +76,7 @@ export default function ClientesPage() {
       local_id: localId,
       nombre: form.nombre.trim(),
       telefono: form.telefono.trim() || null,
+      direccion: form.direccion.trim() || null,
       observaciones: form.observaciones.trim() || null,
     }
     if (editando) {
@@ -208,6 +211,15 @@ export default function ClientesPage() {
                   value={form.telefono}
                   onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))}
                   placeholder="Ej: 2235001234"
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Dirección</label>
+                <input
+                  value={form.direccion}
+                  onChange={(e) => setForm((f) => ({ ...f, direccion: e.target.value }))}
+                  placeholder="Ej: Rivadavia 1234"
                   className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
                 />
               </div>

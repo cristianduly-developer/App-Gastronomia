@@ -270,8 +270,9 @@ export default function ColaboradoresPage() {
 
       {/* Modal agregar/editar */}
       {modal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm shadow-xl max-h-[90vh] flex flex-col">
+          <div className="p-6 overflow-y-auto flex-1">
             <h3 className="text-lg font-bold text-white mb-5">
               {editando ? 'Editar colaborador' : 'Agregar colaborador'}
             </h3>
@@ -393,6 +394,7 @@ export default function ColaboradoresPage() {
                 {guardando ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}

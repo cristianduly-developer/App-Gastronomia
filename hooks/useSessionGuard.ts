@@ -21,10 +21,46 @@ export function useSessionGuard() {
       }
 
       const meta = session.user.app_metadata ?? {}
-      const localId: string | null = meta.local_id ?? null
+      let localId: string | null = meta.local_id ?? null
       const plan: Plan | null = meta.plan ?? null
-      const isOwner: boolean = meta.is_owner ?? true
-      const rolSistema: RolSistema = isOwner ? 'owner' : (meta.rol ?? 'cajero')
+      let isOwner: boolean = meta.is_owner ?? false
+      let rolSistema: RolSistema = isOwner ? 'owner' : (meta.rol ?? 'cajero')
+
+      // Si no tiene local_id en app_metadata, puede ser un colaborador que ingresó
+      // con Google antes de que el owner lo agregara al sistema central.
+      // Buscar en la tabla colaboradores por email.
+      if (!localId && session.user.email) {
+        const { data: colab } = await supabaseApp
+          .from('colaboradores')
+          .select('local_id, rol, activo')
+          .eq('email', session.user.email.toLowerCase())
+          .eq('activo', true)
+          .maybeSingle()
+        if (colab) {
+          localId = colab.local_id
+          isOwner = false
+          rolSistema = colab.rol as RolSistema
+        }
+      }
+
+      // Si es colaborador, verificar que su rol en DB sea el correcto (puede haber cambiado)
+      if (!isOwner && localId && session.user.email) {
+        const { data: colab } = await supabaseApp
+          .from('colaboradores')
+          .select('rol, activo')
+          .eq('local_id', localId)
+          .eq('email', session.user.email.toLowerCase())
+          .maybeSingle()
+        if (colab) {
+          if (!colab.activo) {
+            clearSession()
+            setHydrated()
+            router.push('/login')
+            return
+          }
+          rolSistema = colab.rol as RolSistema
+        }
+      }
 
       // Si es mozo, cargar sus mesas asignadas
       let mesasAsignadas: string[] | null = null
