@@ -26,17 +26,31 @@ export function useSessionGuard() {
       let isOwner: boolean = meta.is_owner ?? false
       let rolSistema: RolSistema = isOwner ? 'owner' : (meta.rol ?? 'cajero')
 
-      // Para colaboradores (no owners), siempre verificar local_id y rol desde DB
-      // ya que el JWT puede no tener rol o tenerlo desactualizado.
+      // Para colaboradores (no owners), siempre verificar local_id, rol y config desde DB
+      // ya que el JWT puede no tener esos datos y la RLS bloquea las queries directas.
+      let mesasAsignadas: string[] | null = null
+      let usaMesas = false, usaDelivery = false, usaCocina = false, usaQr = false
+      let nombreNegocio: string | null = null
+      let onboardingCompleto = false
+
       if (!isOwner) {
         const res = await fetch('/api/auth/session-colab', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         })
         if (res.ok) {
-          const { colab } = await res.json()
+          const { colab, cfg } = await res.json()
           if (colab) {
             localId = colab.local_id
             rolSistema = colab.rol as RolSistema
+            mesasAsignadas = colab.mesas_asignadas ?? null
+            if (cfg) {
+              nombreNegocio = cfg.nombre_negocio ?? null
+              onboardingCompleto = cfg.onboarding_completo ?? false
+              usaMesas = cfg.usa_mesas ?? false
+              usaDelivery = cfg.usa_delivery ?? false
+              usaCocina = cfg.usa_cocina ?? false
+              usaQr = cfg.usa_qr ?? false
+            }
           } else {
             // No está en colaboradores activos — no puede entrar
             clearSession()
@@ -44,25 +58,8 @@ export function useSessionGuard() {
             return
           }
         }
-      }
-
-      // Si es mozo, cargar sus mesas asignadas
-      let mesasAsignadas: string[] | null = null
-      if (!isOwner && rolSistema === 'mozo' && localId && session.user.email) {
-        const { data: colab } = await supabaseApp
-          .from('colaboradores')
-          .select('mesas_asignadas')
-          .eq('email', session.user.email.toLowerCase())
-          .eq('local_id', localId)
-          .maybeSingle()
-        mesasAsignadas = colab?.mesas_asignadas ?? null
-      }
-
-      // Cargar flags de config del local
-      let usaMesas = false, usaDelivery = false, usaCocina = false, usaQr = false
-      let nombreNegocio: string | null = null
-      let onboardingCompleto = false
-      if (localId) {
+      } else if (localId) {
+        // Owner: cargar config normalmente (JWT tiene local_id, RLS pasa)
         const { data: cfg } = await supabaseApp
           .from('config_local')
           .select('nombre_negocio, onboarding_completo, usa_mesas, usa_delivery, usa_cocina, usa_qr')

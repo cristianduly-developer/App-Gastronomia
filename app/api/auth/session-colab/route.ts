@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { data: colab } = await supabaseAdmin
     .from('colaboradores')
-    .select('local_id, rol, activo')
+    .select('local_id, rol, activo, mesas_asignadas')
     .eq('email', user.email.toLowerCase())
     .eq('activo', true)
     .maybeSingle()
@@ -24,5 +24,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ colab: null })
   }
 
-  return NextResponse.json({ colab })
+  const { data: cfg } = await supabaseAdmin
+    .from('config_local')
+    .select('nombre_negocio, onboarding_completo, usa_mesas, usa_delivery, usa_cocina, usa_qr')
+    .eq('local_id', colab.local_id)
+    .maybeSingle()
+
+  return NextResponse.json({ colab, cfg: cfg ?? null })
 }
