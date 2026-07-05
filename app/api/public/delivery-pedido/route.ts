@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { deliveryLimiter, checkMemRateLimit } from '@/lib/ratelimit'
+import { reportarError } from '@/app/lib/reportarError'
 
 export async function POST(req: NextRequest) {
   const ip =
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error || !pedido) {
+    reportarError(error ?? new Error('pedido null'), { pantalla: 'delivery-pedido', accion: 'insert_pedido', metadata: { localId } })
     return NextResponse.json({ error: 'Error al registrar el pedido' }, { status: 500 })
   }
 
@@ -109,6 +111,7 @@ export async function POST(req: NextRequest) {
   )
 
   if (itemsError) {
+    reportarError(itemsError, { pantalla: 'delivery-pedido', accion: 'insert_items', metadata: { localId, pedidoId: pedido.id } })
     await supabaseAdmin.from('pedidos_delivery').delete().eq('id', pedido.id)
     return NextResponse.json({ error: 'Error al registrar los items' }, { status: 500 })
   }

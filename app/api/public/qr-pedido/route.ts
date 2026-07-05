@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { qrLimiter, checkMemRateLimit } from '@/lib/ratelimit'
+import { reportarError } from '@/app/lib/reportarError'
 
 export async function POST(req: NextRequest) {
   const ip =
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) {
+    reportarError(error, { pantalla: 'qr-pedido', accion: 'insert_pedido_qr', metadata: { localId, mesaId } })
     return NextResponse.json({ error: 'Error al registrar el pedido' }, { status: 500 })
   }
 
