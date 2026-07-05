@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const { data: ta } = await supabaseAdmin
       .from('tenant_access')
       .select('plan')
-      .eq('org_id', localId)
+      .eq('tenant_id', localId)
       .maybeSingle()
     plan = ta?.plan ?? 'basico'
   } else {
