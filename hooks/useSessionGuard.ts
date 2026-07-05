@@ -26,39 +26,24 @@ export function useSessionGuard() {
       let isOwner: boolean = meta.is_owner ?? false
       let rolSistema: RolSistema = isOwner ? 'owner' : (meta.rol ?? 'cajero')
 
-      // Si no tiene local_id en app_metadata, puede ser un colaborador que ingresó
-      // con Google antes de que el owner lo agregara al sistema central.
-      // Buscar en la tabla colaboradores por email.
-      if (!localId && session.user.email) {
-        const { data: colab } = await supabaseApp
-          .from('colaboradores')
-          .select('local_id, rol, activo')
-          .eq('email', session.user.email.toLowerCase())
-          .eq('activo', true)
-          .maybeSingle()
-        if (colab) {
-          localId = colab.local_id
-          isOwner = false
-          rolSistema = colab.rol as RolSistema
-        }
-      }
-
-      // Si es colaborador, verificar que su rol en DB sea el correcto (puede haber cambiado)
-      if (!isOwner && localId && session.user.email) {
-        const { data: colab } = await supabaseApp
-          .from('colaboradores')
-          .select('rol, activo')
-          .eq('local_id', localId)
-          .eq('email', session.user.email.toLowerCase())
-          .maybeSingle()
-        if (colab) {
-          if (!colab.activo) {
+      // Si no tiene local_id en app_metadata (colaboradores que ingresan con Google),
+      // consultamos via API con supabaseAdmin para bypassear RLS.
+      if (!localId) {
+        const res = await fetch('/api/auth/session-colab', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const { colab } = await res.json()
+          if (colab) {
+            localId = colab.local_id
+            isOwner = false
+            rolSistema = colab.rol as RolSistema
+          } else {
+            // No es colaborador conocido — no puede entrar
             clearSession()
             setHydrated()
-            router.push('/login')
             return
           }
-          rolSistema = colab.rol as RolSistema
         }
       }
 
