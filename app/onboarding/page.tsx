@@ -54,6 +54,18 @@ export default function OnboardingPage() {
     })
 
     setSession({ nombreNegocio: form.nombre, onboardingCompleto: true })
+
+    // Notificar al SaaS que este mail activó la demo
+    const { data: { session } } = await supabaseApp.auth.getSession()
+    const email = session?.user?.email
+    if (email) {
+      fetch('https://saas.solucionesmdp.com.ar/api/prospecto-activado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-app-id': 'app-gastronomia', 'x-app-key': process.env.NEXT_PUBLIC_ERROR_KEY || '' },
+        body: JSON.stringify({ email }),
+      }).catch(() => {})
+    }
+
     router.push('/dashboard')
   }
 
