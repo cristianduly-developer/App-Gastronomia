@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionGuardProvider } from "@/components/SessionGuardProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.className} bg-gray-950 text-white min-h-full`}>
-        <SessionGuardProvider>
-          {children}
-        </SessionGuardProvider>
+        <ErrorBoundary>
+          <SessionGuardProvider>
+            {children}
+          </SessionGuardProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
