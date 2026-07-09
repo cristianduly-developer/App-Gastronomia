@@ -5,6 +5,7 @@ import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 import { mensajeErrorGuardado } from '@/lib/errores'
+import { ModalPago, labelPago, type PagoResult } from '@/components/ModalPago'
 
 interface Producto { id: string; nombre: string; precio: number; categoria_id: string }
 interface Categoria { id: string; nombre: string }
@@ -50,6 +51,98 @@ const METODO_LABELS: Record<string, string> = {
   efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Débito', credito: 'Crédito',
 }
 
+type MetodoPago = 'efectivo' | 'transferencia' | 'debito' | 'credito'
+const METODOS_LIST: { value: MetodoPago; label: string }[] = [
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'debito', label: 'Débito' },
+  { value: 'credito', label: 'Crédito' },
+]
+
+function SelectorPagoInline({ total, pago, onChange }: { total: number; pago: PagoResult; onChange: (p: PagoResult) => void }) {
+  const [combinado, setCombinado] = useState(false)
+  const [monto1Str, setMonto1Str] = useState('')
+  const monto1 = parseInt(monto1Str.replace(/\D/g, '')) || 0
+  const monto2 = total - monto1
+
+  const setM1 = (m: MetodoPago) => {
+    const m2 = pago.metodo2 === m ? (METODOS_LIST.find(x => x.value !== m)!.value as MetodoPago) : (pago.metodo2 as MetodoPago ?? 'transferencia')
+    onChange({ ...pago, metodo1: m, metodo2: combinado ? m2 : undefined })
+  }
+  const setM2 = (m: MetodoPago) => onChange({ ...pago, metodo2: m })
+
+  useEffect(() => {
+    if (combinado && monto1 > 0 && monto1 < total) {
+      onChange({ metodo1: pago.metodo1, monto1, metodo2: pago.metodo2, monto2 })
+    } else if (!combinado) {
+      onChange({ metodo1: pago.metodo1, monto1: total })
+    }
+  }, [combinado, monto1Str, pago.metodo1, pago.metodo2])
+
+  return (
+    <div>
+      <p className="text-xs text-gray-400 mb-2">Método de pago</p>
+      {!combinado ? (
+        <>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            {METODOS_LIST.map((m) => (
+              <button key={m.value} onClick={() => setM1(m.value)}
+                className={`py-2.5 rounded-xl text-sm font-medium transition border
+                  ${pago.metodo1 === m.value ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => { setCombinado(true); onChange({ ...pago, metodo2: pago.metodo1 === 'efectivo' ? 'transferencia' : 'efectivo' }) }}
+            className="w-full py-2 rounded-xl border border-dashed border-gray-600 text-gray-500 text-xs hover:border-violet-500 hover:text-violet-400 transition">
+            ✂️ Combinar dos métodos
+          </button>
+        </>
+      ) : (
+        <div className="space-y-3">
+          <div className="bg-gray-800 rounded-xl p-3 space-y-2">
+            <p className="text-xs text-gray-500">Primer pago</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {METODOS_LIST.map((m) => (
+                <button key={m.value} onClick={() => setM1(m.value)}
+                  className={`py-2 rounded-lg text-xs font-medium transition border
+                    ${pago.metodo1 === m.value ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:text-white'}`}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <input type="number" inputMode="numeric" placeholder="Monto $" value={monto1Str}
+              onChange={(e) => setMonto1Str(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500" />
+          </div>
+          <div className="bg-gray-800 rounded-xl p-3 space-y-2">
+            <p className="text-xs text-gray-500">Segundo pago</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {METODOS_LIST.filter(m => m.value !== pago.metodo1).map((m) => (
+                <button key={m.value} onClick={() => setM2(m.value)}
+                  className={`py-2 rounded-lg text-xs font-medium transition border
+                    ${pago.metodo2 === m.value ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:text-white'}`}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-between text-sm px-1">
+              <span className="text-gray-500">Resto</span>
+              <span className={monto2 < 0 ? 'text-red-400 font-bold' : 'text-white font-bold'}>
+                {monto2 > 0 ? `$${monto2.toLocaleString()}` : monto2 < 0 ? `−$${Math.abs(monto2).toLocaleString()}` : '—'}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => { setCombinado(false); setMonto1Str(''); onChange({ metodo1: pago.metodo1, monto1: total }) }}
+            className="w-full py-1.5 text-gray-500 text-xs hover:text-gray-400 transition">
+            ← Un solo método
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function tiempoDesde(created_at: string) {
   const mins = Math.floor((Date.now() - new Date(created_at).getTime()) / 60000)
   if (mins < 60) return `${mins} min`
@@ -63,7 +156,6 @@ export default function DeliveryPage() {
   const [expandido, setExpandido] = useState<string | null>(null)
   const [avanzando, setAvanzando] = useState<Set<string>>(new Set())
   const [modalCobro, setModalCobro] = useState<PedidoDelivery | null>(null)
-  const [metodoCobro, setMetodoCobro] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
 
   // Modal nuevo pedido manual
   const [modalNuevo, setModalNuevo] = useState(false)
@@ -74,7 +166,7 @@ export default function DeliveryPage() {
   const [items, setItems] = useState<ItemForm[]>([])
   const [cliente, setCliente] = useState({ nombre: '', tel: '', dir: '', obs: '' })
   const [retiraEnLocal, setRetiraEnLocal] = useState(false)
-  const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
+  const [pagoNuevo, setPagoNuevo] = useState<PagoResult>({ metodo1: 'efectivo', monto1: 0 })
   const [guardando, setGuardando] = useState(false)
   const [clienteSugerido, setClienteSugerido] = useState<{ id: string; nombre: string; telefono: string; direccion: string | null; observaciones: string | null } | null>(null)
   const [buscandoCliente, setBuscandoCliente] = useState(false)
@@ -105,7 +197,6 @@ export default function DeliveryPage() {
     const sig = SIGUIENTE[pedido.estado as EstadoKey]
     if (!sig) return
     if (sig === 'entregado') {
-      setMetodoCobro(pedido.metodo_pago as typeof metodoCobro ?? 'efectivo')
       setModalCobro(pedido)
       return
     }
@@ -115,15 +206,24 @@ export default function DeliveryPage() {
     cargar()
   }
 
-  const confirmarCobro = async () => {
+  const confirmarCobro = async (pago: PagoResult) => {
     if (!modalCobro) return
     setAvanzando((s) => new Set(s).add(modalCobro.id))
     const [{ error: errPedido }, { error: errVenta }] = await Promise.all([
-      supabaseApp.from('pedidos_delivery').update({ estado: 'entregado', metodo_pago: metodoCobro }).eq('id', modalCobro.id),
+      supabaseApp.from('pedidos_delivery').update({
+        estado: 'entregado',
+        metodo_pago: pago.metodo1,
+        metodo_pago_2: pago.metodo2 ?? null,
+        monto_metodo_1: pago.metodo2 ? pago.monto1 : null,
+        monto_metodo_2: pago.metodo2 ? pago.monto2 : null,
+      }).eq('id', modalCobro.id),
       supabaseApp.from('ventas').insert({
         local_id: localId,
         total: modalCobro.total,
-        metodo_pago: metodoCobro,
+        metodo_pago: pago.metodo1,
+        metodo_pago_2: pago.metodo2 ?? null,
+        monto_metodo_1: pago.metodo2 ? pago.monto1 : null,
+        monto_metodo_2: pago.metodo2 ? pago.monto2 : null,
         origen: 'delivery',
         referencia_id: modalCobro.id,
       }),
@@ -183,7 +283,7 @@ export default function DeliveryPage() {
     setItems([])
     setCliente({ nombre: '', tel: '', dir: '', obs: '' })
     setRetiraEnLocal(false)
-    setMetodoPago('efectivo')
+    setPagoNuevo({ metodo1: 'efectivo', monto1: 0 })
     setClienteSugerido(null)
     setModalNuevo(true)
   }
@@ -227,7 +327,10 @@ export default function DeliveryPage() {
       cliente_dir: retiraEnLocal ? 'Retira en el local' : cliente.dir.trim(),
       observaciones: cliente.obs.trim() || null,
       total: totalPedido,
-      metodo_pago: metodoPago,
+      metodo_pago: pagoNuevo.metodo1,
+      metodo_pago_2: pagoNuevo.metodo2 ?? null,
+      monto_metodo_1: pagoNuevo.metodo2 ? pagoNuevo.monto1 : null,
+      monto_metodo_2: pagoNuevo.metodo2 ? pagoNuevo.monto2 : null,
       estado: 'recibido',
       origen: 'manual',
     }).select().single()
@@ -388,7 +491,7 @@ export default function DeliveryPage() {
 
                         {/* Total + método */}
                         <div className="flex items-center justify-between border-t border-gray-800 pt-2">
-                          <span className="text-xs text-gray-500">{METODO_LABELS[p.metodo_pago] ?? p.metodo_pago}</span>
+                          <span className="text-xs text-gray-500">{labelPago(p.metodo_pago, (p as any).metodo_pago_2)}</span>
                           <span className="text-sm font-bold text-white">${p.total.toLocaleString()}</span>
                         </div>
 
@@ -605,21 +708,7 @@ export default function DeliveryPage() {
               )}
 
               {/* Método de pago */}
-              <div>
-                <p className="text-xs text-gray-400 mb-2">Método de pago</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['efectivo', 'transferencia', 'debito', 'credito'] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMetodoPago(m)}
-                      className={`py-2.5 rounded-xl text-sm font-medium transition border
-                        ${metodoPago === m ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}
-                    >
-                      {METODO_LABELS[m]}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <SelectorPagoInline total={totalPedido} pago={pagoNuevo} onChange={setPagoNuevo} />
             </div>
 
             <div className="p-5 border-t border-gray-800 flex-shrink-0 flex gap-3">
@@ -637,35 +726,13 @@ export default function DeliveryPage() {
           </div>
         </div>
       )}
-      {/* Modal cobro delivery */}
       {modalCobro && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4">
-            <div>
-              <h3 className="text-lg font-bold text-white">Cobrar pedido</h3>
-              <p className="text-sm text-gray-400 mt-0.5">{modalCobro.cliente_nombre} · ${modalCobro.total.toLocaleString()}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-2">Método de pago</p>
-              <div className="grid grid-cols-2 gap-2">
-                {(['efectivo', 'transferencia', 'debito', 'credito'] as const).map((m) => (
-                  <button key={m} onClick={() => setMetodoCobro(m)}
-                    className={`py-3 rounded-xl text-sm font-medium transition border ${metodoCobro === m ? 'bg-violet-600 border-violet-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}>
-                    {{ efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Debito', credito: 'Credito' }[m]}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setModalCobro(null)} className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition">
-                Cancelar
-              </button>
-              <button onClick={confirmarCobro} className="flex-1 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl py-3 text-sm transition">
-                Confirmar cobro
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalPago
+          total={modalCobro.total}
+          titulo={`Cobrar — ${modalCobro.cliente_nombre}`}
+          onConfirmar={confirmarCobro}
+          onCancelar={() => setModalCobro(null)}
+        />
       )}
       </PlanGuard>
     </RouteGuard>

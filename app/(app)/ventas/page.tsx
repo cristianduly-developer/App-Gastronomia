@@ -5,6 +5,7 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
 import { mensajeErrorGuardado } from '@/lib/errores'
+import { ModalPago, labelPago, type PagoResult } from '@/components/ModalPago'
 
 interface Producto {
   id: string
@@ -29,17 +30,13 @@ interface ItemCarrito {
 
 type MetodoPago = 'efectivo' | 'transferencia' | 'debito' | 'credito'
 
-const METODOS: { value: MetodoPago; label: string; emoji: string; color: string }[] = [
-  { value: 'efectivo', label: 'Efectivo', emoji: '💵', color: 'bg-green-600 hover:bg-green-500' },
-  { value: 'transferencia', label: 'Transferencia', emoji: '📲', color: 'bg-blue-600 hover:bg-blue-500' },
-  { value: 'debito', label: 'Débito', emoji: '💳', color: 'bg-violet-600 hover:bg-violet-500' },
-  { value: 'credito', label: 'Crédito', emoji: '💳', color: 'bg-amber-600 hover:bg-amber-500' },
-]
-
 interface VentaHistorial {
   id: string
   total: number
   metodo_pago: string
+  metodo_pago_2: string | null
+  monto_metodo_1: number | null
+  monto_metodo_2: number | null
   origen: string | null
   created_at: string
   items_venta: { nombre: string; cantidad: number; subtotal: number }[]
@@ -47,6 +44,10 @@ interface VentaHistorial {
 
 const METODO_LABEL: Record<string, string> = {
   efectivo: 'Efectivo', transferencia: 'Transf.', debito: 'Débito', credito: 'Crédito',
+}
+
+function labelHistorial(metodo_pago: string, metodo_pago_2?: string | null) {
+  return labelPago(metodo_pago, metodo_pago_2)
 }
 
 export default function VentasPage() {
@@ -64,6 +65,7 @@ export default function VentasPage() {
   const [loadingHistorial, setLoadingHistorial] = useState(false)
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const [carritoAbierto, setCarritoAbierto] = useState(false)
+  const [modalPagoAbierto, setModalPagoAbierto] = useState(false)
 
   const cargarHistorial = async () => {
     setLoadingHistorial(true)
@@ -71,7 +73,7 @@ export default function VentasPage() {
     hoy.setHours(0, 0, 0, 0)
     const { data } = await supabaseApp
       .from('ventas')
-      .select('id, total, metodo_pago, origen, created_at, items_venta(nombre, cantidad, subtotal)')
+      .select('id, total, metodo_pago, metodo_pago_2, monto_metodo_1, monto_metodo_2, origen, created_at, items_venta(nombre, cantidad, subtotal)')
       .eq('local_id', localId)
       .gte('created_at', hoy.toISOString())
       .order('created_at', { ascending: false })
@@ -115,9 +117,11 @@ export default function VentasPage() {
 
   const total = carrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0)
 
-  const cobrar = async (metodo: MetodoPago) => {
+  const cobrar = async (pago: PagoResult) => {
     if (carrito.length === 0) return
     setCobrando(true)
+    setModalPagoAbierto(false)
+    setCarritoAbierto(false)
 
     // Buscar caja abierta
     const { data: cajaAbierta } = await supabaseApp
@@ -133,7 +137,10 @@ export default function VentasPage() {
         local_id: localId,
         caja_id: cajaAbierta?.id ?? null,
         total,
-        metodo_pago: metodo,
+        metodo_pago: pago.metodo1,
+        metodo_pago_2: pago.metodo2 ?? null,
+        monto_metodo_1: pago.metodo2 ? pago.monto1 : null,
+        monto_metodo_2: pago.metodo2 ? pago.monto2 : null,
         estado: 'completada',
       })
       .select('id')
@@ -163,7 +170,7 @@ export default function VentasPage() {
       return
     }
 
-    Sentry.addBreadcrumb({ category: 'ventas', message: 'venta cerrada', data: { metodo, total }, level: 'info' })
+    Sentry.addBreadcrumb({ category: 'ventas', message: 'venta cerrada', data: { metodo: pago.metodo1, total }, level: 'info' })
 
     setCarrito([])
     setCobrando(false)
@@ -218,7 +225,7 @@ export default function VentasPage() {
                         {new Date(v.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-lg">
-                        {METODO_LABEL[v.metodo_pago] ?? v.metodo_pago}
+                        {labelHistorial(v.metodo_pago, v.metodo_pago_2)}
                       </span>
                       {v.origen === 'comanda' && <span className="text-xs text-violet-400">Mesa</span>}
                     </div>
@@ -398,19 +405,13 @@ export default function VentasPage() {
             )}
 
             {carrito.length > 0 && !exito && (
-              <div className="grid grid-cols-2 gap-2">
-                {METODOS.map((m) => (
-                  <button
-                    key={m.value}
-                    onClick={() => cobrar(m.value)}
-                    disabled={cobrando}
-                    className={`${m.color} disabled:opacity-50 text-white font-semibold rounded-xl py-2.5 text-sm transition flex items-center justify-center gap-1.5`}
-                  >
-                    <span>{m.emoji}</span>
-                    {m.label}
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => setModalPagoAbierto(true)}
+                disabled={cobrando}
+                className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold rounded-xl py-3 text-sm transition"
+              >
+                {cobrando ? 'Procesando...' : `Cobrar — $${total.toLocaleString()}`}
+              </button>
             )}
 
             {carrito.length === 0 && !exito && (
@@ -475,24 +476,27 @@ export default function VentasPage() {
               {exito ? (
                 <div className="bg-green-950 border border-green-700 text-green-400 rounded-xl p-3 text-sm text-center font-medium">✓ Venta registrada</div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {METODOS.map((m) => (
-                    <button
-                      key={m.value}
-                      onClick={() => { cobrar(m.value); setCarritoAbierto(false) }}
-                      disabled={cobrando}
-                      className={`${m.color} disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-sm transition flex items-center justify-center gap-1.5`}
-                    >
-                      <span>{m.emoji}</span>{m.label}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  onClick={() => setModalPagoAbierto(true)}
+                  disabled={cobrando}
+                  className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold rounded-xl py-3 text-sm transition"
+                >
+                  {cobrando ? 'Procesando...' : `Cobrar — $${total.toLocaleString()}`}
+                </button>
               )}
             </div>
           </div>
         </div>
       )}
 
+      {modalPagoAbierto && (
+        <ModalPago
+          total={total}
+          onConfirmar={cobrar}
+          onCancelar={() => setModalPagoAbierto(false)}
+          procesando={cobrando}
+        />
+      )}
     </RouteGuard>
   )
 }

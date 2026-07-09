@@ -5,6 +5,7 @@ import { RouteGuard } from '@/components/RouteGuard'
 import { PlanGuard } from '@/components/PlanGuard'
 import { supabaseApp } from '@/lib/supabaseApp'
 import { useSession } from '@/lib/sessionStore'
+import { ModalPago, type PagoResult } from '@/components/ModalPago'
 
 interface Mesa { id: string; nombre: string; estado: string; sector_id: string }
 interface ItemComanda {
@@ -51,7 +52,6 @@ export default function MesaDetallePage() {
   const [loading, setLoading] = useState(true)
   const [procesando, setProcesando] = useState(false)
   const [confirmCobro, setConfirmCobro] = useState(false)
-  const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'debito' | 'credito'>('efectivo')
 
   const cargarDatos = useCallback(async () => {
     const [{ data: m }, { data: cmd }] = await Promise.all([
@@ -93,7 +93,7 @@ export default function MesaDetallePage() {
     setProcesando(false)
   }
 
-  const imprimirTicket = () => {
+  const imprimirTicket = (pago?: PagoResult) => {
     if (!comanda || !mesa) return
     const ahora = new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     const lineas = items.map((i) =>
@@ -104,6 +104,9 @@ export default function MesaDetallePage() {
     ).join('')
 
     const metodoLabel: Record<string, string> = { efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Débito', credito: 'Crédito' }
+    const pagoTexto = pago?.metodo2
+      ? `${metodoLabel[pago.metodo1]} $${pago.monto1.toLocaleString()} + ${metodoLabel[pago.metodo2]} $${pago.monto2!.toLocaleString()}`
+      : pago ? (metodoLabel[pago.metodo1] ?? pago.metodo1) : ''
 
     const ventana = window.open('', '_blank')
     if (!ventana) return
@@ -136,7 +139,7 @@ export default function MesaDetallePage() {
             <td style="text-align:right">$${comanda.total.toLocaleString()}</td>
           </tr>
         </table>
-        <p class="metodo">${metodoLabel[metodoPago] ?? metodoPago}</p>
+        <p class="metodo">${pagoTexto}</p>
         <p class="gracias">¡Gracias por su visita!</p>
         <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
         <script>
@@ -154,9 +157,10 @@ export default function MesaDetallePage() {
     ventana.document.close()
   }
 
-  const cobrarComanda = async () => {
+  const cobrarComanda = async (pago: PagoResult) => {
     if (!comanda || !mesa) return
     setProcesando(true)
+    imprimirTicket(pago)
 
     await Promise.all([
       supabaseApp.from('comandas').update({
@@ -164,11 +168,13 @@ export default function MesaDetallePage() {
         cerrada_at: new Date().toISOString(),
       }).eq('id', comanda.id),
       supabaseApp.from('mesas').update({ estado: 'libre' }).eq('id', mesaId),
-      // Crear venta
       supabaseApp.from('ventas').insert({
         local_id: localId,
         total: comanda.total,
-        metodo_pago: metodoPago,
+        metodo_pago: pago.metodo1,
+        metodo_pago_2: pago.metodo2 ?? null,
+        monto_metodo_1: pago.metodo2 ? pago.monto1 : null,
+        monto_metodo_2: pago.metodo2 ? pago.monto2 : null,
         origen: 'comanda',
         referencia_id: comanda.id,
       }),
@@ -341,43 +347,14 @@ export default function MesaDetallePage() {
         )}
       </div>
 
-      {/* Modal cobro */}
       {confirmCobro && comanda && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-1">Cobrar mesa</h3>
-            <p className="text-gray-400 text-sm mb-5">Total: <strong className="text-white">${comanda.total.toLocaleString()}</strong></p>
-
-            <div className="space-y-2 mb-5">
-              {(['efectivo', 'transferencia', 'debito', 'credito'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMetodoPago(m)}
-                  className={`w-full py-2.5 rounded-xl text-sm font-medium transition border
-                    ${metodoPago === m
-                      ? 'bg-violet-600 border-violet-500 text-white'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}
-                >
-                  {{ efectivo: 'Efectivo', transferencia: 'Transferencia', debito: 'Débito', credito: 'Crédito' }[m]}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={imprimirTicket}
-              className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl py-2.5 text-sm transition mb-3"
-            >
-              🖨️ Ver ticket de cobro
-            </button>
-
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmCobro(false)} className="flex-1 bg-gray-800 text-gray-300 font-semibold rounded-xl py-3 text-sm hover:bg-gray-700 transition">Cancelar</button>
-              <button onClick={cobrarComanda} disabled={procesando} className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white font-semibold rounded-xl py-3 text-sm transition">
-                {procesando ? 'Procesando...' : 'Confirmar cobro'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalPago
+          total={comanda.total}
+          titulo="Cobrar mesa"
+          onConfirmar={cobrarComanda}
+          onCancelar={() => setConfirmCobro(false)}
+          procesando={procesando}
+        />
       )}
       </PlanGuard>
     </RouteGuard>
