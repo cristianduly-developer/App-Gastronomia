@@ -234,11 +234,16 @@ export default function ConfiguracionPage() {
             <label className="block text-xs text-gray-400 mb-1.5">Teléfono (opcional)</label>
             <input
               type="tel"
+              inputMode="numeric"
               value={form.telefono}
-              onChange={(e) => setForm((f) => f ? { ...f, telefono: e.target.value } : f)}
+              onChange={(e) => {
+                const solo = e.target.value.replace(/[^0-9+\-\s]/g, '')
+                setForm((f) => f ? { ...f, telefono: solo } : f)
+              }}
               placeholder="Ej: 2235001234"
               className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
             />
+            <p className="text-xs text-gray-600 mt-1">Solo números — aparece en el menú QR público</p>
           </div>
         </section>
 
