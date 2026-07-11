@@ -34,9 +34,9 @@ export async function POST(req: NextRequest) {
   if (!sub?.mp_preapproval_id) return NextResponse.json({ error: 'No tenés débito automático activo.' }, { status: 400 })
 
   try {
-    const r = await fetch(`${SAAS_URL}/api/mp-cancelar-suscripcion`, {
+    const r = await fetch(`${SAAS_URL}/api/mp-crear-suscripcion?action=cancelar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.INTERNAL_API_KEY || '' },
       body: JSON.stringify({ org_id: emp.org_id, app_id: 'app-gastronomia', mp_preapproval_id: sub.mp_preapproval_id }),
     })
     return NextResponse.json(await r.json(), { status: r.status })
