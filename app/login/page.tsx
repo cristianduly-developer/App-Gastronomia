@@ -14,7 +14,7 @@ const PLAN_MAP: Record<string, Plan> = {
   demo: 'profesional',     // demo tiene acceso profesional
 }
 
-const WA_LINK = 'https://wa.me/5492236965481'
+const WA_LINK = 'https://wa.me/5492236965481?text=Hola%2C+soy+usuario+de+App+Gastronomia+y+necesito+soporte'
 
 // ─── Pantalla registro demo ───────────────────────────────────────────────────
 function PantallaRegistro({ onRegistrar, onLogout, registrando, error }: {
