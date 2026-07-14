@@ -128,7 +128,7 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Ayuda + Logout */}
+      {/* Ayuda + Soporte + Logout */}
       <div className="p-3 border-t border-gray-800 space-y-1">
         <a
           href="https://gastronomia.solucionesmdp.com.ar/ayuda"
@@ -138,6 +138,18 @@ export function Sidebar() {
           <span className="text-base">📖</span>
           Centro de ayuda
         </a>
+        <button
+          onClick={async () => {
+            const { data: { session } } = await supabaseApp.auth.getSession()
+            const mail = session?.user?.email || ''
+            const txt = `Hola, soy usuario de App Gastronomía y necesito soporte.\nMi mail: ${mail}\nMi problema es: `
+            window.open(`https://wa.me/5492236965481?text=${encodeURIComponent(txt)}`, '_blank')
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-green-400 hover:text-green-300 hover:bg-gray-800 transition-all"
+        >
+          <span className="text-base">💬</span>
+          Soporte
+        </button>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
