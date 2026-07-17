@@ -38,7 +38,7 @@ ON CONFLICT (plan) DO UPDATE SET
 --    Así ningún usuario existente se rompe durante el rollout.
 CREATE OR REPLACE FUNCTION tiene_acceso(tid UUID) RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT COALESCE((SELECT valid_until > now() FROM tenant_access WHERE tenant_id = tid), TRUE);
+  SELECT COALESCE((SELECT valid_until > now() FROM tenant_access WHERE tenant_id = tid), FALSE);
 $$;
 
 CREATE OR REPLACE FUNCTION plan_tenant(tid UUID) RETURNS TEXT
@@ -60,7 +60,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
       WHEN 'combos'   THEN usa_combos
       ELSE TRUE END
     FROM plan_limites WHERE plan = plan_tenant(tid)
-  ), TRUE);   -- plan desconocido → permite (fail-open)
+  ), FALSE);   -- plan desconocido → bloquea (fail-closed)
 $$;
 
 -- ══════════════════════════════════════════════════════════════

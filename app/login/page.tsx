@@ -106,10 +106,11 @@ function SelectorPlanesMP({ orgId, titulo, subtitulo, emoji, onLogout }: {
     if (!orgId) { setError('No pudimos identificar tu cuenta. Contactá al soporte.'); return }
     setCargando(true); setError('')
     try {
+      const { data: { session } } = await supabaseApp.auth.getSession()
       const res = await fetch('/api/mp-pago-publico', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org_id: orgId, plan: planSel }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ plan: planSel }),
       })
       const data = await res.json()
       if (!res.ok || !data.init_point) { setError(data.error || 'Error al iniciar el pago.'); setCargando(false); return }

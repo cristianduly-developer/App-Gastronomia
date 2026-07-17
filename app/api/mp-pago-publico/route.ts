@@ -1,10 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { createClient } from '@supabase/supabase-js'
 
 const SAAS_URL = process.env.SAAS_ADMIN_URL || 'https://saas.solucionesmdp.com.ar'
+const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!, {
+  auth: { persistSession: false, autoRefreshToken: false },
+})
 
 export async function POST(req: NextRequest) {
-  const { org_id, plan } = await req.json()
-  if (!org_id || !plan) return NextResponse.json({ error: 'org_id y plan requeridos' }, { status: 400 })
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const token = authHeader.split(' ')[1]
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+  if (error || !user?.email) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const { plan } = await req.json()
+  if (!plan) return NextResponse.json({ error: 'plan requerido' }, { status: 400 })
+
+  const { data: emp } = await central
+    .from('empleados_organizacion')
+    .select('org_id')
+    .eq('email', user.email.toLowerCase())
+    .limit(1)
+    .maybeSingle()
+
+  const org_id = emp?.org_id
+  if (!org_id) return NextResponse.json({ error: 'No se encontró tu organización.' }, { status: 404 })
 
   try {
     const r = await fetch(`${SAAS_URL}/api/mp-crear-suscripcion`, {
