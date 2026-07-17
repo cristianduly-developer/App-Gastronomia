@@ -4,9 +4,8 @@ import { verificarAcceso } from '@/lib/supabaseCentral'
 import { createClient } from '@supabase/supabase-js'
 import { reportarError } from '@/app/lib/reportarError'
 
-const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!)
-
 export async function POST(req: NextRequest) {
+  const central = createClient(process.env.CENTRAL_URL!, process.env.CENTRAL_SERVICE_KEY!)
   const authHeader = req.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
