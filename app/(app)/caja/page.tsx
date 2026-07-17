@@ -24,6 +24,9 @@ interface GastoCaja {
 interface VentaResumen {
   total: number
   metodo_pago: string
+  metodo_pago_2: string | null
+  monto_metodo_1: number | null
+  monto_metodo_2: number | null
   origen: string
 }
 
@@ -69,7 +72,7 @@ export default function CajaPage() {
       // Ventas desde que se abrió la caja (con o sin caja_id, por fecha)
       const { data: ventasData } = await supabaseApp
         .from('ventas')
-        .select('total, metodo_pago, origen')
+        .select('total, metodo_pago, metodo_pago_2, monto_metodo_1, monto_metodo_2, origen')
         .eq('local_id', localId)
         .eq('estado', 'completada')
         .gte('created_at', cajaData.created_at)
@@ -140,7 +143,16 @@ export default function CajaPage() {
 
   const totalVentas      = ventas.reduce((s, v) => s + Number(v.total), 0)
   const cantVentas       = ventas.length
-  const totalEfectivo    = ventas.filter((v) => v.metodo_pago === 'efectivo').reduce((s, v) => s + Number(v.total), 0)
+  const totalEfectivo = ventas.reduce((s, v) => {
+    if (v.metodo_pago_2) {
+      // Pago combinado: sumar solo la porción en efectivo
+      if (v.metodo_pago === 'efectivo') s += Number(v.monto_metodo_1 ?? 0)
+      if (v.metodo_pago_2 === 'efectivo') s += Number(v.monto_metodo_2 ?? 0)
+    } else if (v.metodo_pago === 'efectivo') {
+      s += Number(v.total)
+    }
+    return s
+  }, 0)
   const totalDigital     = totalVentas - totalEfectivo
   const totalGastos      = gastos.reduce((s, g) => s + Number(g.monto), 0)
   const efectivoEsperado = cajaActual ? Number(cajaActual.monto_apertura) + totalEfectivo - totalGastos : 0
