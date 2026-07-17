@@ -3,10 +3,12 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseAnon = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let _anon: ReturnType<typeof createClient> | null = null
+function getSupabaseAnon() {
+  if (!_anon) _anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  return _anon
+}
+const supabaseAnon = getSupabaseAnon()
 
 interface Categoria { id: string; nombre: string }
 interface Producto {

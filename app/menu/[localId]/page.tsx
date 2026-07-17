@@ -23,13 +23,16 @@ const TIPO_LABELS: Record<string, string> = {
   restaurante: 'Restaurante', cafeteria: 'Cafetería', otro: 'Gastronomía',
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export default async function MenuPublicoPage({ params }: Params) {
   const { localId } = await params
+  const supabase = getSupabase()
 
   const [{ data: config }, { data: categorias }, { data: productos }, { data: combos }] = await Promise.all([
     supabase.from('config_local').select('nombre_negocio, tipo_negocio, telefono, logo_url').eq('local_id', localId).single(),
