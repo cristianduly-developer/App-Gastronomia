@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.INTERNAL_API_KEY || '' },
       body: JSON.stringify({ org_id: orgId, app_id: 'app-gastronomia', plan }),
     })
-    return NextResponse.json(await r.json(), { status: r.status })
+    const body = await r.json()
+    console.log('[mp-crear-suscripcion] SAAS status:', r.status, 'body:', JSON.stringify(body))
+    return NextResponse.json(body, { status: r.status })
   } catch {
     return NextResponse.json({ error: 'Error al conectar con el servicio de pagos.' }, { status: 500 })
   }
