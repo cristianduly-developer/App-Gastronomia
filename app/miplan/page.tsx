@@ -87,7 +87,8 @@ export default function MiPlanPage() {
     setCancelando(false)
   }
 
-  const planesUpgrade = planesDB.filter(p => p.id !== planActual)
+  // En demo mostramos los 3 planes (el usuario no tiene suscripción activa)
+  const planesUpgrade = estadoSuscripcion === 'demo' ? planesDB : planesDB.filter(p => p.id !== planActual)
 
   return (
     <div className="min-h-screen bg-gray-950 text-white pb-24">
