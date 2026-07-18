@@ -69,7 +69,7 @@ export default function LandingPage() {
           href="/login"
           className="inline-block bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 py-4 rounded-2xl text-lg transition"
         >
-          Probalo gratis 14 días →
+          Probalo gratis 28 días →
         </Link>
         <p className="text-gray-600 text-sm mt-4">Sin tarjeta de crédito. Cancelás cuando querés.</p>
       </section>
@@ -186,7 +186,7 @@ export default function LandingPage() {
       {/* CTA final */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
         <h2 className="text-4xl font-black text-white mb-4">¿Listo para empezar?</h2>
-        <p className="text-gray-400 text-lg mb-8">14 días gratis, sin tarjeta. En 5 minutos tu negocio está funcionando.</p>
+        <p className="text-gray-400 text-lg mb-8">28 días gratis, sin tarjeta. En 5 minutos tu negocio está funcionando.</p>
         <Link
           href="/login"
           className="inline-block bg-violet-600 hover:bg-violet-500 text-white font-bold px-10 py-4 rounded-2xl text-lg transition"
