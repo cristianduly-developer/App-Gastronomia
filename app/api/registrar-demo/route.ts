@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
         body: JSON.stringify({
           from: mailFrom,
-          to: process.env.ADMIN_NOTIFICATION_EMAIL || 'cristianduly@gmail.com',
+          to: process.env.ADMIN_NOTIFICATION_EMAIL || 'solucionesmdp.oficial@gmail.com',
           subject: `🆕 Nueva cuenta demo — ${orgData?.nombre ?? email}`,
           html: `
             <h2>🆕 Nueva cuenta demo en App de Gastronomía</h2>
