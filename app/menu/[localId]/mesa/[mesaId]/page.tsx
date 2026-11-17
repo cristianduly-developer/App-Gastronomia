@@ -51,6 +51,7 @@ export default function MenuMesaPage() {
   const [numeroPedido, setNumeroPedido] = useState<number | null>(null)
   const [estadoPedido, setEstadoPedido] = useState<'pendiente' | 'aceptado' | 'rechazado'>('pendiente')
   const [itemsListo, setItemsListo] = useState(false)
+  const [pedidosAdelante, setPedidosAdelante] = useState(0)
   const yaNotificado = useRef(false)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
@@ -163,6 +164,7 @@ export default function MenuMesaPage() {
       if (!res.ok) return
       const data = await res.json()
       setEstadoPedido(data.estado)
+      setPedidosAdelante(data.pedidosAdelante ?? 0)
       if (data.estado === 'rechazado') return
       if (data.itemsListos && !yaNotificado.current) {
         yaNotificado.current = true
@@ -324,7 +326,15 @@ export default function MenuMesaPage() {
                 </div>
               </div>
 
-              <div className="mt-8 bg-[#181818] border border-[#252525] rounded-2xl p-4 space-y-2">
+              {pedidosAdelante > 0 && (
+                <div className="mt-6 bg-violet-950/50 border border-violet-800 rounded-2xl p-4">
+                  <p className="text-sm text-violet-300 font-semibold">
+                    {pedidosAdelante === 1 ? 'Hay 1 pedido antes del tuyo' : `Hay ${pedidosAdelante} pedidos antes del tuyo`}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 bg-[#181818] border border-[#252525] rounded-2xl p-4 space-y-2">
                 <p className="text-sm text-orange-400 font-semibold">📱 No cierres esta pantalla</p>
                 <p className="text-xs text-gray-400">
                   Te vamos a avisar con una alarma, vibración y la pantalla en rojo cuando tu pedido esté listo para retirar.
