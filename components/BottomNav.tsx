@@ -10,9 +10,9 @@ import { usePedidosDelivery } from '@/context/AppRealtimeContext'
 import { useAppUpdate } from '@/hooks/useAppUpdate'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',     emoji: '📊', permiso: 'verDashboard',    config: null },
   { href: '/ventas',        label: 'Ventas',        emoji: '💰', permiso: 'verVentas',        config: null },
   { href: '/mesas',         label: 'Mesas',         emoji: '🪑', permiso: 'verMesas',         config: 'usaMesas' },
+  { href: '/dashboard',     label: 'Inicio',        emoji: '🏠', permiso: 'verDashboard',    config: null },
   { href: '/pedidos',       label: 'Pedidos QR',    emoji: '📋', permiso: 'verComandas',      config: 'usaQr' },
   { href: '/cocina',        label: 'Cocina',        emoji: '👨‍🍳', permiso: 'verCocina',        config: 'usaCocina' },
   { href: '/delivery',      label: 'Delivery',      emoji: '🛵', permiso: 'verDelivery',      config: 'usaDelivery' },
@@ -41,8 +41,12 @@ export function BottomNav() {
     (item.config === null || configFlags[item.config])
   )
 
-  const principales = items.slice(0, 4)
-  const resto = items.slice(4)
+  const inicio = items.find((i) => i.href === '/dashboard')
+  const sinInicio = items.filter((i) => i.href !== '/dashboard')
+  const antes = sinInicio.slice(0, 2)
+  const despues = sinInicio.slice(2, 3)
+  const principales = inicio ? [...antes, inicio, ...despues] : sinInicio.slice(0, 4)
+  const resto = inicio ? sinInicio.slice(3) : sinInicio.slice(4)
 
   const getBadge = (href: string) => {
     if (href === '/pedidos' && pedidosPendientes > 0) return pedidosPendientes

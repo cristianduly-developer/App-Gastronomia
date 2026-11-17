@@ -12,7 +12,7 @@ import { useAppUpdate } from '@/hooks/useAppUpdate'
 import { usePlan } from '@/hooks/usePlan'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',      emoji: '📊', permiso: 'verDashboard',    config: null },
+  { href: '/dashboard',     label: 'Inicio',         emoji: '🏠', permiso: 'verDashboard',    config: null },
   { href: '/ventas',        label: 'Ventas',         emoji: '💰', permiso: 'verVentas',        config: null },
   { href: '/mesas',         label: 'Mesas',          emoji: '🪑', permiso: 'verMesas',         config: 'usaMesas' },
   { href: '/pedidos',       label: 'Pedidos QR',     emoji: '📋', permiso: 'verComandas',      config: 'usaQr' },

@@ -331,11 +331,18 @@ export default function ProductosPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1.5">Categoría</label>
-                  <select value={formProd.categoria_id} onChange={(e) => setFormProd((f) => ({ ...f, categoria_id: e.target.value }))}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-500">
-                    <option value="">Sin categoría</option>
-                    {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setFormProd((f) => ({ ...f, categoria_id: '' }))}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium transition ${!formProd.categoria_id ? 'bg-violet-600 text-white' : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600'}`}>
+                      Sin categoría
+                    </button>
+                    {categorias.map((c) => (
+                      <button key={c.id} type="button" onClick={() => setFormProd((f) => ({ ...f, categoria_id: c.id }))}
+                        className={`px-3 py-2 rounded-xl text-sm font-medium transition ${formProd.categoria_id === c.id ? 'bg-violet-600 text-white' : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600'}`}>
+                        {c.nombre}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

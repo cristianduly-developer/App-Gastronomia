@@ -242,11 +242,12 @@ export default function PromosPage() {
                       <select
                         value={item.producto_id}
                         onChange={(e) => cambiarItem(i, 'producto_id', e.target.value)}
-                        className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                        className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 appearance-none"
+                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%239ca3af\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                       >
-                        <option value="">Seleccioná un producto</option>
+                        <option value="" className="bg-gray-800 text-gray-400">Seleccioná un producto</option>
                         {productos.map((p) => (
-                          <option key={p.id} value={p.id}>{p.nombre} — ${p.precio.toLocaleString()}</option>
+                          <option key={p.id} value={p.id} className="bg-gray-800 text-white">{p.nombre} — ${p.precio.toLocaleString()}</option>
                         ))}
                       </select>
                       <input

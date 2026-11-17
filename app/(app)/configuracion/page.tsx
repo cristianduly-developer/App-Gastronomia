@@ -219,15 +219,14 @@ export default function ConfiguracionPage() {
 
           <div>
             <label className="block text-xs text-gray-400 mb-1.5">Tipo de negocio</label>
-            <select
-              value={form.tipo_negocio}
-              onChange={(e) => setForm((f) => f ? { ...f, tipo_negocio: e.target.value } : f)}
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-500"
-            >
+            <div className="flex flex-wrap gap-2">
               {Object.entries(TIPO_LABELS).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
+                <button key={v} type="button" onClick={() => setForm((f) => f ? { ...f, tipo_negocio: v } : f)}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${form.tipo_negocio === v ? 'bg-violet-600 text-white' : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600'}`}>
+                  {l}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           <div>
