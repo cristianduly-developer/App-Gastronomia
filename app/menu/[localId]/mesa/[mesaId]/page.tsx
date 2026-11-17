@@ -150,58 +150,28 @@ export default function MenuMesaPage() {
     } catch {}
   }, [])
 
+  const checkEstado = useCallback(async () => {
+    if (!pedidoId) return
+    try {
+      const res = await fetch(`/api/public/qr-estado?pedidoId=${pedidoId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setEstadoPedido(data.estado)
+      if (data.estado === 'rechazado') return
+      if (data.itemsListos && !yaNotificado.current) {
+        yaNotificado.current = true
+        setItemsListo(true)
+        playDing()
+      }
+    } catch {}
+  }, [pedidoId, playDing])
+
   useEffect(() => {
     if (!pedidoId || paso !== 'seguimiento') return
-
-    const channel = supabaseAnon
-      .channel(`tracking-${pedidoId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos_qr', filter: `id=eq.${pedidoId}` }, (payload) => {
-        const nuevo = payload.new as any
-        setEstadoPedido(nuevo.estado)
-        if (nuevo.estado === 'rechazado') return
-        if (nuevo.estado === 'aceptado') {
-          checkItemsListo(nuevo.id)
-        }
-      })
-      .subscribe()
-
-    const intervalId = setInterval(() => checkItemsListo(pedidoId), 5000)
-
-    return () => {
-      supabaseAnon.removeChannel(channel)
-      clearInterval(intervalId)
-    }
-  }, [pedidoId, paso])
-
-  const checkItemsListo = async (pId: string) => {
-    const { data: pedido } = await supabaseAnon
-      .from('pedidos_qr')
-      .select('estado, mesa_id')
-      .eq('id', pId)
-      .single()
-    if (!pedido || pedido.estado !== 'aceptado') return
-
-    const { data: comanda } = await supabaseAnon
-      .from('comandas')
-      .select('id')
-      .eq('mesa_id', pedido.mesa_id)
-      .eq('estado', 'abierta')
-      .maybeSingle()
-    if (!comanda) return
-
-    const { data: items } = await supabaseAnon
-      .from('items_comanda')
-      .select('estado')
-      .eq('comanda_id', comanda.id)
-    if (!items?.length) return
-
-    const todosListos = items.every((i) => i.estado === 'listo' || i.estado === 'entregado')
-    if (todosListos && !yaNotificado.current) {
-      yaNotificado.current = true
-      setItemsListo(true)
-      playDing()
-    }
-  }
+    checkEstado()
+    const intervalId = setInterval(checkEstado, 3000)
+    return () => clearInterval(intervalId)
+  }, [pedidoId, paso, checkEstado])
 
   const enviarPedido = async () => {
     if (cart.length === 0 || !config) return
