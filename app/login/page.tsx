@@ -74,88 +74,31 @@ function PantallaRegistro({ onRegistrar, onLogout, registrando, error }: {
   )
 }
 
-// ─── Pantalla demo vencido ────────────────────────────────────────────────────
-const PLANES_META: Record<string, { label: string; color: string }> = {
-  basico:      { label: 'Básico',      color: '#6b7280' },
-  profesional: { label: 'Profesional', color: '#7c3aed' },
-  premium:     { label: 'Premium',     color: '#d97706' },
-}
-
-function SelectorPlanesMP({ orgId, titulo, subtitulo, emoji, onLogout }: {
-  orgId: string | null; titulo: string; subtitulo: string; emoji: string; onLogout: () => void
+// ─── Pantalla acceso bloqueado ────────────────────────────────────────────────
+function PantallaAccesoBloqueado({ titulo, subtitulo, emoji, onLogout }: {
+  titulo: string; subtitulo: string; emoji: string; onLogout: () => void
 }) {
-  const [planSel, setPlanSel] = useState('profesional')
-  const [planes,  setPlanes]  = useState<any[]>([])
-  const [cargando,setCargando]= useState(false)
-  const [error,   setError]   = useState('')
-
-  useEffect(() => {
-    fetch('/api/planes-precios').then(r => r.json()).then(data => {
-      if (data.planes?.length) {
-        const ordenados = ['basico', 'profesional', 'premium'].map(id => {
-          const row = data.planes.find((p: any) => p.plan === id)
-          if (!row) return null
-          return { id, ...PLANES_META[id], precio: '$' + Number(row.precio_mensual).toLocaleString('es-AR'), beneficios: row.beneficios || [] }
-        }).filter(Boolean)
-        setPlanes(ordenados)
-      }
-    }).catch(() => {})
-  }, [])
-
-  const suscribirse = async () => {
-    if (!orgId) { setError('No pudimos identificar tu cuenta. Contactá al soporte.'); return }
-    setCargando(true); setError('')
-    try {
-      const { data: { session } } = await supabaseApp.auth.getSession()
-      const res = await fetch('/api/mp-pago-publico', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
-        body: JSON.stringify({ plan: planSel }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.init_point) { setError(data.error || 'Error al iniciar el pago.'); setCargando(false); return }
-      window.location.href = data.init_point
-    } catch { setError('Error de conexión. Intentá de nuevo.'); setCargando(false) }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col pb-10">
-      <div className="bg-gradient-to-br from-violet-900 to-violet-950 px-6 py-10 text-center">
-        <div className="text-5xl mb-3">{emoji}</div>
-        <h1 className="text-xl font-extrabold text-white mb-1">{titulo}</h1>
-        <p className="text-violet-200 text-sm leading-relaxed">{subtitulo}</p>
-      </div>
-      <div className="px-5 pt-5 flex flex-col gap-3 flex-1">
-        <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Elegí tu plan</div>
-        {planes.length === 0 && <div className="text-center text-gray-500 text-sm py-6">Cargando planes...</div>}
-        {planes.map((p: any) => (
-          <div key={p.id} onClick={() => setPlanSel(p.id)}
-            className="rounded-2xl p-4 cursor-pointer border-2 transition-all"
-            style={{ borderColor: planSel === p.id ? p.color : '#1f2937', background: planSel === p.id ? p.color + '18' : '#111827' }}>
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-base" style={{ color: p.color }}>{p.label}</span>
-              <span className="font-black text-white text-base">{p.precio}<span className="text-gray-400 font-normal text-xs">/mes</span></span>
-            </div>
-            {p.beneficios?.length > 0 ? (
-              <ul className="mt-2 flex flex-col gap-1">
-                {p.beneficios.map((b: string, i: number) => (
-                  <li key={i} className="text-xs text-gray-300 flex items-center gap-1.5">
-                    <span style={{ color: p.color }}>✓</span> {b}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ))}
-        <div className="bg-violet-950/50 border border-violet-800 rounded-xl p-3 text-xs text-violet-300">
-          💳 El pago se procesa por <strong>Mercado Pago</strong>. Se renueva automáticamente cada mes. Podés cancelar en cualquier momento desde la app.
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm flex flex-col gap-5">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="text-5xl mb-1">{emoji}</div>
+          <h1 className="text-xl font-extrabold text-white">{titulo}</h1>
+          <p className="text-gray-400 text-sm leading-relaxed">{subtitulo}</p>
         </div>
-        {error && <div className="text-red-400 text-xs bg-red-950/40 border border-red-800 rounded-xl p-3">{error}</div>}
-        <button onClick={suscribirse} disabled={cargando || !orgId}
-          className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-opacity"
-          style={{ background: cargando ? '#374151' : '#7c3aed', opacity: (cargando || !orgId) ? 0.7 : 1 }}>
-          {cargando ? 'Redirigiendo a Mercado Pago...' : `Suscribirme — Plan ${planes.find(p => p.id === planSel)?.label ?? planSel}`}
-        </button>
+
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 text-center">
+          <p className="text-white text-sm font-semibold mb-1">¿Querés seguir usando la app?</p>
+          <p className="text-gray-400 text-xs leading-relaxed">
+            Escribinos por WhatsApp y te armamos un plan a medida para tu negocio.
+          </p>
+        </div>
+
+        <a href="https://wa.me/5492235767784?text=Hola%2C%20se%20me%20venci%C3%B3%20la%20demo%20de%20App%20Gastronom%C3%ADa%20y%20quiero%20seguir%20us%C3%A1ndola"
+          className="w-full py-4 rounded-2xl text-white font-bold text-base bg-green-600 hover:bg-green-700 active:scale-95 transition-all text-center block">
+          💬 Escribinos por WhatsApp
+        </a>
+
         <button onClick={onLogout} className="w-full py-3 rounded-2xl text-gray-500 text-sm border border-gray-800">
           Salir
         </button>
@@ -389,13 +332,13 @@ export default function LoginPage() {
     return <PantallaRegistro onRegistrar={handleRegistrar} onLogout={handleLogout} registrando={registrando} error={errorRegistro} />
   }
   if (pantalla === 'demo_vencido') {
-    return <SelectorPlanesMP orgId={orgIdBloqueo} titulo="Tu prueba gratuita terminó" subtitulo="Activá un plan para seguir gestionando tu negocio." emoji="⏰" onLogout={handleLogout} />
+    return <PantallaAccesoBloqueado titulo="Tu prueba gratuita terminó" subtitulo="Los 28 días de demo ya pasaron. Contactanos para activar tu plan." emoji="⏰" onLogout={handleLogout} />
   }
   if (pantalla === 'suspendido') {
-    return <SelectorPlanesMP orgId={orgIdBloqueo} titulo="Cuenta suspendida" subtitulo="Reactivá tu suscripción para recuperar el acceso completo." emoji="🔒" onLogout={handleLogout} />
+    return <PantallaAccesoBloqueado titulo="Cuenta suspendida" subtitulo="Tu cuenta está suspendida. Contactanos para reactivarla." emoji="🔒" onLogout={handleLogout} />
   }
   if (pantalla === 'cancelado') {
-    return <SelectorPlanesMP orgId={orgIdBloqueo} titulo="Suscripción cancelada" subtitulo="Reactivá tu cuenta eligiendo un plan." emoji="❌" onLogout={handleLogout} />
+    return <PantallaAccesoBloqueado titulo="Suscripción cancelada" subtitulo="Tu cuenta fue cancelada. Contactanos para reactivarla." emoji="❌" onLogout={handleLogout} />
   }
 
   return (
