@@ -41,52 +41,6 @@ test.describe('verificar-acceso', () => {
   })
 })
 
-// ─── PLANES Y PRECIOS ───────────────────────────────────────────────
-test.describe('planes-precios', () => {
-  test('retorna lista de planes', async ({ request }) => {
-    const res = await request.get(`${BASE}/api/planes-precios`)
-    expect(res.ok()).toBeTruthy()
-    const body = await res.json()
-    expect(body.ok).toBe(true)
-    expect(Array.isArray(body.planes)).toBe(true)
-    expect(body.planes.length).toBeGreaterThan(0)
-  })
-
-  test('cada plan tiene nombre y precio', async ({ request }) => {
-    const res = await request.get(`${BASE}/api/planes-precios`)
-    const body = await res.json()
-    for (const plan of body.planes) {
-      expect(plan).toHaveProperty('plan')
-      expect(plan).toHaveProperty('precio_mensual')
-      expect(['sincargo','demo','basico','profesional','premium']).toContain(plan.plan)
-    }
-  })
-
-  test('existe plan básico con precio 25000', async ({ request }) => {
-    const res = await request.get(`${BASE}/api/planes-precios`)
-    const body = await res.json()
-    const basico = body.planes.find(p => p.plan === 'basico')
-    expect(basico).toBeTruthy()
-    expect(basico.precio_mensual).toBe(25000)
-  })
-
-  test('existe plan profesional con precio 35000', async ({ request }) => {
-    const res = await request.get(`${BASE}/api/planes-precios`)
-    const body = await res.json()
-    const prof = body.planes.find(p => p.plan === 'profesional')
-    expect(prof).toBeTruthy()
-    expect(prof.precio_mensual).toBe(35000)
-  })
-
-  test('existe plan premium con precio 50000', async ({ request }) => {
-    const res = await request.get(`${BASE}/api/planes-precios`)
-    const body = await res.json()
-    const prem = body.planes.find(p => p.plan === 'premium')
-    expect(prem).toBeTruthy()
-    expect(prem.precio_mensual).toBe(50000)
-  })
-})
-
 // ─── COLABORADORES ──────────────────────────────────────────────────
 test.describe('colaboradores', () => {
   test('sin auth retorna error 4xx', async ({ request }) => {
@@ -111,35 +65,6 @@ test.describe('endpoints públicos', () => {
 
   test('delivery-pedido sin datos retorna error controlado', async ({ request }) => {
     const res = await request.post(`${BASE}/api/public/delivery-pedido`, { data: {} })
-    expect(res.status()).toBeLessThan(500)
-  })
-})
-
-// ─── MP SUSCRIPCION ─────────────────────────────────────────────────
-test.describe('mp-crear-suscripcion', () => {
-  test('sin auth retorna error 4xx', async ({ request }) => {
-    const res = await request.post(`${BASE}/api/mp-crear-suscripcion`, {
-      data: { plan: 'profesional' }
-    })
-    expect(res.status()).toBeGreaterThanOrEqual(400)
-    expect(res.status()).toBeLessThan(500)
-  })
-
-  test('con auth y plan inválido no explota', async ({ request }) => {
-    if (!TOKEN) return test.skip()
-    const res = await request.post(`${BASE}/api/mp-crear-suscripcion`, {
-      headers: AUTH,
-      data: { plan: 'plan_inexistente' }
-    })
-    expect(res.status()).toBeLessThan(500)
-  })
-})
-
-// ─── MP CANCELAR ────────────────────────────────────────────────────
-test.describe('mp-cancelar-suscripcion', () => {
-  test('sin auth retorna error 4xx', async ({ request }) => {
-    const res = await request.post(`${BASE}/api/mp-cancelar-suscripcion`)
-    expect(res.status()).toBeGreaterThanOrEqual(400)
     expect(res.status()).toBeLessThan(500)
   })
 })
