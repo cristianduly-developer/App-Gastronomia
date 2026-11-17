@@ -17,6 +17,7 @@ interface Config {
   usa_qr: boolean
   usa_qr_pedidos: boolean
   qr_auto_aceptar: boolean
+  qr_cliente_retira: boolean
   tiempo_entrega_estimado: string
   logo_url: string
 }
@@ -66,6 +67,7 @@ export default function ConfiguracionPage() {
             usa_qr:                  data.usa_qr ?? false,
             usa_qr_pedidos:          data.usa_qr_pedidos ?? false,
             qr_auto_aceptar:         data.qr_auto_aceptar ?? false,
+            qr_cliente_retira:       data.qr_cliente_retira ?? false,
             tiempo_entrega_estimado: data.tiempo_entrega_estimado ?? '',
             logo_url:                data.logo_url ?? '',
           }
@@ -447,6 +449,21 @@ export default function ConfiguracionPage() {
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
                     ${form.qr_auto_aceptar ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
                     {form.qr_auto_aceptar && <span className="text-white text-xs">✓</span>}
+                  </div>
+                </button>
+                <button
+                  onClick={() => toggle('qr_cliente_retira')}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all
+                    ${form.qr_cliente_retira ? 'bg-violet-950 border-violet-600' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
+                >
+                  <span className="text-2xl">🔔</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">Cliente retira en mostrador</p>
+                    <p className="text-xs text-gray-400 mt-0.5">El cliente ve el estado de su pedido y recibe un aviso con sonido cuando está listo</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                    ${form.qr_cliente_retira ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`}>
+                    {form.qr_cliente_retira && <span className="text-white text-xs">✓</span>}
                   </div>
                 </button>
               </div>

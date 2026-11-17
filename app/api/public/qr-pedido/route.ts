@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const { data: config } = await supabaseAdmin
     .from('config_local')
-    .select('local_id')
+    .select('local_id, qr_cliente_retira')
     .eq('local_id', localId)
     .maybeSingle()
 
@@ -105,18 +105,18 @@ export async function POST(req: NextRequest) {
 
   const totalReal = itemsConPrecio.reduce((acc: number, i: any) => acc + i.subtotal, 0)
 
-  const { error } = await supabaseAdmin.from('pedidos_qr').insert({
+  const { data: pedido, error } = await supabaseAdmin.from('pedidos_qr').insert({
     local_id: localId,
     mesa_id: mesaId,
     mesa_nombre: mesaNombre,
     items: itemsConPrecio,
     total: totalReal,
-  })
+  }).select('id').single()
 
   if (error) {
     reportarError(error, { pantalla: 'qr-pedido', accion: 'insert_pedido_qr', metadata: { localId, mesaId } })
     return NextResponse.json({ error: 'Error al registrar el pedido' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, pedidoId: pedido.id, clienteRetira: config?.qr_cliente_retira ?? false })
 }

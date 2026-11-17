@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
@@ -18,10 +18,10 @@ interface Combo {
   id: string; nombre: string; descripcion: string | null; precio: number; imagen_url: string | null
   combo_items: ComboItemDB[]
 }
-interface Config { nombre_negocio: string; telefono: string | null; usa_qr_pedidos: boolean; logo_url: string | null; tipo_negocio: string }
+interface Config { nombre_negocio: string; telefono: string | null; usa_qr_pedidos: boolean; qr_cliente_retira: boolean; logo_url: string | null; tipo_negocio: string }
 interface CartItem { productoId: string; nombre: string; precio: number; cantidad: number; observacion: string; tipo?: 'producto' | 'combo' }
 
-type Paso = 'menu' | 'carrito' | 'confirmado'
+type Paso = 'menu' | 'carrito' | 'confirmado' | 'seguimiento'
 
 const TIPO_LABELS: Record<string, string> = {
   food_truck: 'Food Truck', rotiseria: 'Rotisería', pizzeria: 'Pizzería',
@@ -47,13 +47,18 @@ export default function MenuMesaPage() {
   const [enviando, setEnviando] = useState(false)
   const [modalObs, setModalObs] = useState<{ idx: number; valor: string } | null>(null)
 
+  const [pedidoId, setPedidoId] = useState<string | null>(null)
+  const [estadoPedido, setEstadoPedido] = useState<'pendiente' | 'aceptado' | 'rechazado'>('pendiente')
+  const [itemsListo, setItemsListo] = useState(false)
+  const yaNotificado = useRef(false)
+
   const fetchProductos = () =>
     supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre')
       .then(({ data: prods }) => { if (prods) setProductos(prods) })
 
   useEffect(() => {
     Promise.all([
-      supabaseAnon.from('config_local').select('nombre_negocio, telefono, usa_qr_pedidos, logo_url, tipo_negocio').eq('local_id', localId).single(),
+      supabaseAnon.from('config_local').select('nombre_negocio, telefono, usa_qr_pedidos, qr_cliente_retira, logo_url, tipo_negocio').eq('local_id', localId).single(),
       supabaseAnon.from('mesas').select('nombre').eq('id', mesaId).single(),
       supabaseAnon.from('categorias').select('*').eq('local_id', localId).eq('activo', true).order('nombre'),
       supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre'),
@@ -115,6 +120,88 @@ export default function MenuMesaPage() {
   const total = cart.reduce((s, i) => s + i.precio * i.cantidad, 0)
   const cantTotal = cart.reduce((s, i) => s + i.cantidad, 0)
 
+  const playDing = useCallback(() => {
+    try {
+      const ctx = new AudioContext()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 830
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.5, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.8)
+      setTimeout(() => {
+        const osc2 = ctx.createOscillator()
+        const gain2 = ctx.createGain()
+        osc2.connect(gain2)
+        gain2.connect(ctx.destination)
+        osc2.frequency.value = 1050
+        osc2.type = 'sine'
+        gain2.gain.setValueAtTime(0.5, ctx.currentTime)
+        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1)
+        osc2.start(ctx.currentTime)
+        osc2.stop(ctx.currentTime + 1)
+      }, 300)
+      try { navigator.vibrate?.([200, 100, 200]) } catch {}
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!pedidoId || paso !== 'seguimiento') return
+
+    const channel = supabaseAnon
+      .channel(`tracking-${pedidoId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos_qr', filter: `id=eq.${pedidoId}` }, (payload) => {
+        const nuevo = payload.new as any
+        setEstadoPedido(nuevo.estado)
+        if (nuevo.estado === 'rechazado') return
+        if (nuevo.estado === 'aceptado') {
+          checkItemsListo(nuevo.id)
+        }
+      })
+      .subscribe()
+
+    const intervalId = setInterval(() => checkItemsListo(pedidoId), 5000)
+
+    return () => {
+      supabaseAnon.removeChannel(channel)
+      clearInterval(intervalId)
+    }
+  }, [pedidoId, paso])
+
+  const checkItemsListo = async (pId: string) => {
+    const { data: pedido } = await supabaseAnon
+      .from('pedidos_qr')
+      .select('estado, mesa_id')
+      .eq('id', pId)
+      .single()
+    if (!pedido || pedido.estado !== 'aceptado') return
+
+    const { data: comanda } = await supabaseAnon
+      .from('comandas')
+      .select('id')
+      .eq('mesa_id', pedido.mesa_id)
+      .eq('estado', 'abierta')
+      .maybeSingle()
+    if (!comanda) return
+
+    const { data: items } = await supabaseAnon
+      .from('items_comanda')
+      .select('estado')
+      .eq('comanda_id', comanda.id)
+    if (!items?.length) return
+
+    const todosListos = items.every((i) => i.estado === 'listo' || i.estado === 'entregado')
+    if (todosListos && !yaNotificado.current) {
+      yaNotificado.current = true
+      setItemsListo(true)
+      playDing()
+    }
+  }
+
   const enviarPedido = async () => {
     if (cart.length === 0 || !config) return
     setEnviando(true)
@@ -134,7 +221,16 @@ export default function MenuMesaPage() {
       setError(data.error ?? 'Error al enviar el pedido. Intentá de nuevo.')
       return
     }
-    setPaso('confirmado')
+    const resData = await res.json()
+    if (resData.clienteRetira && resData.pedidoId) {
+      setPedidoId(resData.pedidoId)
+      setEstadoPedido('pendiente')
+      setItemsListo(false)
+      yaNotificado.current = false
+      setPaso('seguimiento')
+    } else {
+      setPaso('confirmado')
+    }
   }
 
   if (loading) {
@@ -168,6 +264,80 @@ export default function MenuMesaPage() {
             className="mt-8 text-xs text-orange-400 hover:text-orange-300 transition">
             Agregar más items
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (paso === 'seguimiento') {
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4">
+        <div className="text-center max-w-sm w-full">
+          {estadoPedido === 'rechazado' ? (
+            <>
+              <div className="w-20 h-20 bg-red-900/40 border border-red-700 rounded-full flex items-center justify-center mx-auto mb-5">
+                <span className="text-4xl">✕</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">Pedido rechazado</h1>
+              <p className="text-gray-400 text-sm">El local no pudo aceptar tu pedido en este momento.</p>
+              <button onClick={() => { setPaso('menu') }}
+                className="mt-8 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl px-8 py-3 text-sm transition">
+                Volver al menú
+              </button>
+            </>
+          ) : itemsListo ? (
+            <>
+              <div className="w-24 h-24 bg-green-900/40 border-2 border-green-500 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce">
+                <span className="text-5xl">🔔</span>
+              </div>
+              <h1 className="text-3xl font-black text-white mb-2">¡Tu pedido está listo!</h1>
+              <p className="text-green-400 text-lg font-semibold mb-1">Retiralo en el mostrador</p>
+              <p className="text-gray-400 text-sm">{mesaNombre} · {config.nombre_negocio}</p>
+              <p className="text-gray-400 text-sm mt-2">Total: <strong className="text-white text-lg">${total.toLocaleString()}</strong></p>
+              <button onClick={() => { setCart([]); setPedidoId(null); setPaso('menu') }}
+                className="mt-8 text-xs text-orange-400 hover:text-orange-300 transition">
+                Volver al menú
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-20 h-20 bg-orange-900/30 border border-orange-700 rounded-full flex items-center justify-center mx-auto mb-5">
+                <span className="text-4xl animate-pulse">🍳</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">
+                {estadoPedido === 'pendiente' ? 'Pedido enviado' : 'Preparando tu pedido'}
+              </h1>
+              <p className="text-gray-400 text-sm mb-1">{mesaNombre} · {config.nombre_negocio}</p>
+
+              {/* Pasos visuales */}
+              <div className="mt-6 space-y-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-bold">✓</div>
+                  <p className="text-sm text-white">Pedido enviado</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${estadoPedido === 'aceptado' ? 'bg-green-600 text-white' : 'bg-[#252525] text-gray-500'}`}>
+                    {estadoPedido === 'aceptado' ? '✓' : '2'}
+                  </div>
+                  <p className={`text-sm ${estadoPedido === 'aceptado' ? 'text-white' : 'text-gray-500'}`}>
+                    {estadoPedido === 'aceptado' ? 'Aceptado y en cocina' : 'Esperando confirmación'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#252525] flex items-center justify-center text-sm font-bold text-gray-500">3</div>
+                  <p className="text-sm text-gray-500">Listo para retirar</p>
+                </div>
+              </div>
+
+              <div className="mt-8 bg-[#181818] border border-[#252525] rounded-2xl p-4">
+                <p className="text-xs text-gray-500">
+                  Dejá esta pantalla abierta y te avisamos con un sonido cuando tu pedido esté listo para retirar.
+                </p>
+              </div>
+
+              <p className="text-gray-400 text-sm mt-4">Total: <strong className="text-white">${total.toLocaleString()}</strong></p>
+            </>
+          )}
         </div>
       </div>
     )
