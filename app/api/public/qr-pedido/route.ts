@@ -105,18 +105,28 @@ export async function POST(req: NextRequest) {
 
   const totalReal = itemsConPrecio.reduce((acc: number, i: any) => acc + i.subtotal, 0)
 
+  const hoy = new Date()
+  const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).toISOString()
+  const { count } = await supabaseAdmin
+    .from('pedidos_qr')
+    .select('id', { count: 'exact', head: true })
+    .eq('local_id', localId)
+    .gte('created_at', inicioHoy)
+  const numeroDia = (count ?? 0) + 1
+
   const { data: pedido, error } = await supabaseAdmin.from('pedidos_qr').insert({
     local_id: localId,
     mesa_id: mesaId,
     mesa_nombre: mesaNombre,
     items: itemsConPrecio,
     total: totalReal,
-  }).select('id').single()
+    numero_dia: numeroDia,
+  }).select('id, numero_dia').single()
 
   if (error) {
     reportarError(error, { pantalla: 'qr-pedido', accion: 'insert_pedido_qr', metadata: { localId, mesaId } })
     return NextResponse.json({ error: 'Error al registrar el pedido' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, pedidoId: pedido.id, clienteRetira: config?.qr_cliente_retira ?? false })
+  return NextResponse.json({ ok: true, pedidoId: pedido.id, numeroDia: pedido.numero_dia, clienteRetira: config?.qr_cliente_retira ?? false })
 }

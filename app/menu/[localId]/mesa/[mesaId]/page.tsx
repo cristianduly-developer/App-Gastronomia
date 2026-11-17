@@ -48,6 +48,7 @@ export default function MenuMesaPage() {
   const [modalObs, setModalObs] = useState<{ idx: number; valor: string } | null>(null)
 
   const [pedidoId, setPedidoId] = useState<string | null>(null)
+  const [numeroPedido, setNumeroPedido] = useState<number | null>(null)
   const [estadoPedido, setEstadoPedido] = useState<'pendiente' | 'aceptado' | 'rechazado'>('pendiente')
   const [itemsListo, setItemsListo] = useState(false)
   const yaNotificado = useRef(false)
@@ -224,6 +225,7 @@ export default function MenuMesaPage() {
     const resData = await res.json()
     if (resData.clienteRetira && resData.pedidoId) {
       setPedidoId(resData.pedidoId)
+      setNumeroPedido(resData.numeroDia ?? null)
       setEstadoPedido('pendiente')
       setItemsListo(false)
       yaNotificado.current = false
@@ -290,6 +292,9 @@ export default function MenuMesaPage() {
               <div className="w-24 h-24 bg-green-900/40 border-2 border-green-500 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce">
                 <span className="text-5xl">🔔</span>
               </div>
+              {numeroPedido && (
+                <p className="text-6xl font-black text-green-400 mb-2">#{numeroPedido}</p>
+              )}
               <h1 className="text-3xl font-black text-white mb-2">¡Tu pedido está listo!</h1>
               <p className="text-green-400 text-lg font-semibold mb-1">Retiralo en el mostrador</p>
               <p className="text-gray-400 text-sm">{mesaNombre} · {config.nombre_negocio}</p>
@@ -304,6 +309,9 @@ export default function MenuMesaPage() {
               <div className="w-20 h-20 bg-orange-900/30 border border-orange-700 rounded-full flex items-center justify-center mx-auto mb-5">
                 <span className="text-4xl animate-pulse">🍳</span>
               </div>
+              {numeroPedido && (
+                <p className="text-5xl font-black text-orange-400 mb-2">#{numeroPedido}</p>
+              )}
               <h1 className="text-2xl font-bold text-white mb-2">
                 {estadoPedido === 'pendiente' ? 'Pedido enviado' : 'Preparando tu pedido'}
               </h1>

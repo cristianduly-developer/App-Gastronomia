@@ -25,6 +25,7 @@ interface PedidoQR {
   total: number
   estado: 'pendiente' | 'aceptado' | 'rechazado'
   created_at: string
+  numero_dia: number | null
 }
 
 function tiempoEspera(created_at: string) {
@@ -185,9 +186,14 @@ export default function PedidosQRPage() {
               <div key={pedido.id} className="bg-gray-900 border border-violet-800 rounded-2xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3 bg-violet-950/40">
-                  <div>
-                    <span className="font-bold text-white">{pedido.mesa_nombre}</span>
-                    <span className="text-xs text-gray-400 ml-3">{tiempoEspera(pedido.created_at)}</span>
+                  <div className="flex items-center gap-3">
+                    {pedido.numero_dia && (
+                      <span className="text-lg font-black text-orange-400">#{pedido.numero_dia}</span>
+                    )}
+                    <div>
+                      <span className="font-bold text-white">{pedido.mesa_nombre}</span>
+                      <span className="text-xs text-gray-400 ml-3">{tiempoEspera(pedido.created_at)}</span>
+                    </div>
                   </div>
                   <span className="text-sm font-bold text-violet-300">${pedido.total.toLocaleString()}</span>
                 </div>
