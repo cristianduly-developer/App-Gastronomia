@@ -1,33 +1,5 @@
 import Link from 'next/link'
 
-const FEATURES_BASICO = [
-  '🛵 Delivery con link público y QR',
-  '💰 Ventas rápidas (mostrador / take away)',
-  '📱 Menú digital QR para tus clientes',
-  '👥 Clientes con historial',
-  '🏧 Control de caja',
-  '📊 Dashboard de ventas del día',
-  '🍔 Hasta 50 productos',
-  '👤 1 colaborador',
-]
-
-const FEATURES_PROFESIONAL = [
-  '✅ Todo lo del plan Básico',
-  '🪑 Mesas y salón con estados en tiempo real',
-  '📋 Comandas por mesa con tandas',
-  '👨‍🍳 Monitor de cocina en tiempo real',
-  '📱 QR de pedido desde la mesa',
-  '🍔 Hasta 150 productos',
-  '👥 Hasta 3 colaboradores',
-]
-
-const FEATURES_PREMIUM = [
-  '✅ Todo lo del plan Profesional',
-  '🍔 Productos ilimitados',
-  '👥 Hasta 6 colaboradores',
-  '⭐ Soporte prioritario',
-]
-
 const COMO_FUNCIONA = [
   { emoji: '1️⃣', titulo: 'Creá tu cuenta', desc: 'Entrás con Google, completás el nombre de tu negocio y elegís qué módulos usás.' },
   { emoji: '2️⃣', titulo: 'Cargá tu carta', desc: 'Creá categorías y productos con foto y precio. En minutos tenés tu menú listo.' },
@@ -69,9 +41,9 @@ export default function LandingPage() {
           href="/login"
           className="inline-block bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 py-4 rounded-2xl text-lg transition"
         >
-          Probalo gratis 28 días →
+          Probalo gratis 28 días
         </Link>
-        <p className="text-gray-600 text-sm mt-4">Sin tarjeta de crédito. Cancelás cuando querés.</p>
+        <p className="text-gray-600 text-sm mt-4">Sin tarjeta de crédito. Plan Profesional completo.</p>
       </section>
 
       {/* Módulos */}
@@ -111,88 +83,24 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Planes */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center mb-4">Planes</h2>
-        <p className="text-gray-400 text-center mb-12">Elegí según tu negocio. Podés cambiar de plan en cualquier momento.</p>
-        <div className="grid md:grid-cols-3 gap-6">
-
-          {/* Básico */}
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Básico</p>
-              <p className="text-4xl font-black text-white">$25.000<span className="text-lg font-normal text-gray-500">/mes</span></p>
-              <p className="text-gray-400 text-sm mt-2">Para food trucks, rotiserías y dark kitchens</p>
-            </div>
-            <ul className="space-y-2.5 mb-8">
-              {FEATURES_BASICO.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
-                  <span className="shrink-0">{f.split(' ')[0]}</span>
-                  <span>{f.split(' ').slice(1).join(' ')}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/login" className="block text-center bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 rounded-xl transition text-sm">
-              Empezar gratis
-            </Link>
-          </div>
-
-          {/* Profesional */}
-          <div className="bg-violet-950 border-2 border-violet-500 rounded-2xl p-6 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-              MÁS POPULAR
-            </div>
-            <div className="mb-6">
-              <p className="text-sm text-violet-300 font-medium uppercase tracking-wider mb-1">Profesional</p>
-              <p className="text-4xl font-black text-white">$35.000<span className="text-lg font-normal text-violet-300">/mes</span></p>
-              <p className="text-violet-300 text-sm mt-2">Para restaurantes pequeños con salón</p>
-            </div>
-            <ul className="space-y-2.5 mb-8">
-              {FEATURES_PROFESIONAL.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-gray-200">
-                  <span className="shrink-0">{f.split(' ')[0]}</span>
-                  <span>{f.split(' ').slice(1).join(' ')}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/login" className="block text-center bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl transition text-sm">
-              Empezar gratis
-            </Link>
-          </div>
-
-          {/* Premium */}
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Premium</p>
-              <p className="text-4xl font-black text-white">$50.000<span className="text-lg font-normal text-gray-500">/mes</span></p>
-              <p className="text-gray-400 text-sm mt-2">Para restaurantes medianos y grandes</p>
-            </div>
-            <ul className="space-y-2.5 mb-8">
-              {FEATURES_PREMIUM.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
-                  <span className="shrink-0">{f.split(' ')[0]}</span>
-                  <span>{f.split(' ').slice(1).join(' ')}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/login" className="block text-center bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 rounded-xl transition text-sm">
-              Empezar gratis
-            </Link>
-          </div>
-
-        </div>
-      </section>
-
       {/* CTA final */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-4xl font-black text-white mb-4">¿Listo para empezar?</h2>
-        <p className="text-gray-400 text-lg mb-8">28 días gratis, sin tarjeta. En 5 minutos tu negocio está funcionando.</p>
-        <Link
-          href="/login"
-          className="inline-block bg-violet-600 hover:bg-violet-500 text-white font-bold px-10 py-4 rounded-2xl text-lg transition"
-        >
-          Crear mi cuenta gratis →
-        </Link>
+        <h2 className="text-4xl font-black text-white mb-4">¿Listo para probarlo?</h2>
+        <p className="text-gray-400 text-lg mb-8">28 días gratis con todas las funciones. En 5 minutos tu negocio está funcionando.</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/login"
+            className="inline-block bg-violet-600 hover:bg-violet-500 text-white font-bold px-10 py-4 rounded-2xl text-lg transition"
+          >
+            Probar gratis
+          </Link>
+          <a
+            href="https://wa.me/5492235767784?text=Hola%2C%20quiero%20saber%20m%C3%A1s%20sobre%20GastroApp"
+            className="inline-block bg-green-600 hover:bg-green-500 text-white font-bold px-10 py-4 rounded-2xl text-lg transition"
+          >
+            Consultar por WhatsApp
+          </a>
+        </div>
       </section>
 
       {/* Footer */}
@@ -200,6 +108,8 @@ export default function LandingPage() {
         <div className="flex items-center justify-center gap-3 mb-2">
           <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-base">🍽️</div>
           <span className="font-bold text-gray-400">GastroApp</span>
+          <span className="text-gray-700">·</span>
+          <span className="text-gray-500">por <a href="https://solucionesmdp.com.ar" className="text-violet-400 hover:underline">Soluciones MDP</a></span>
         </div>
         <p>Gestión para negocios gastronómicos</p>
       </footer>
