@@ -393,7 +393,7 @@ export default function ConfiguracionPage() {
               </div>
               <div className="flex flex-col gap-2">
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  Imprimí este QR y pegalo en las mesas. Los clientes escanean y ven la carta.
+                  QR de tu carta digital. Imprimilo y ponelo en la entrada, mostrador o redes sociales.
                 </p>
                 <button
                   onClick={() => {
