@@ -52,6 +52,16 @@ export default function MenuMesaPage() {
   const [estadoPedido, setEstadoPedido] = useState<'pendiente' | 'aceptado' | 'rechazado'>('pendiente')
   const [itemsListo, setItemsListo] = useState(false)
   const yaNotificado = useRef(false)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+
+  useEffect(() => {
+    if (paso === 'seguimiento' && 'wakeLock' in navigator) {
+      (navigator as any).wakeLock.request('screen').then((lock: WakeLockSentinel) => {
+        wakeLockRef.current = lock
+      }).catch(() => {})
+    }
+    return () => { wakeLockRef.current?.release(); wakeLockRef.current = null }
+  }, [paso])
 
   const fetchProductos = () =>
     supabaseAnon.from('productos').select('id, nombre, descripcion, precio, categoria_id, agotado, imagen_url').eq('local_id', localId).eq('activo', true).order('nombre')
@@ -121,32 +131,28 @@ export default function MenuMesaPage() {
   const total = cart.reduce((s, i) => s + i.precio * i.cantidad, 0)
   const cantTotal = cart.reduce((s, i) => s + i.cantidad, 0)
 
-  const playDing = useCallback(() => {
+  const playAlarm = useCallback(() => {
     try {
       const ctx = new AudioContext()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = 830
-      osc.type = 'sine'
-      gain.gain.setValueAtTime(0.5, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8)
-      osc.start(ctx.currentTime)
-      osc.stop(ctx.currentTime + 0.8)
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator()
-        const gain2 = ctx.createGain()
-        osc2.connect(gain2)
-        gain2.connect(ctx.destination)
-        osc2.frequency.value = 1050
-        osc2.type = 'sine'
-        gain2.gain.setValueAtTime(0.5, ctx.currentTime)
-        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1)
-        osc2.start(ctx.currentTime)
-        osc2.stop(ctx.currentTime + 1)
-      }, 300)
-      try { navigator.vibrate?.([200, 100, 200]) } catch {}
+      const playBeep = (time: number) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.value = 1200
+        osc.type = 'square'
+        gain.gain.setValueAtTime(0.6, time)
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.12)
+        osc.start(time)
+        osc.stop(time + 0.12)
+      }
+      for (let round = 0; round < 5; round++) {
+        const base = ctx.currentTime + round * 0.8
+        playBeep(base)
+        playBeep(base + 0.18)
+        playBeep(base + 0.36)
+      }
+      try { navigator.vibrate?.([300, 100, 300, 100, 300, 200, 300, 100, 300, 100, 300]) } catch {}
     } catch {}
   }, [])
 
@@ -161,10 +167,10 @@ export default function MenuMesaPage() {
       if (data.itemsListos && !yaNotificado.current) {
         yaNotificado.current = true
         setItemsListo(true)
-        playDing()
+        playAlarm()
       }
     } catch {}
-  }, [pedidoId, playDing])
+  }, [pedidoId, playAlarm])
 
   useEffect(() => {
     if (!pedidoId || paso !== 'seguimiento') return
@@ -259,20 +265,31 @@ export default function MenuMesaPage() {
             </>
           ) : itemsListo ? (
             <>
-              <div className="w-24 h-24 bg-green-900/40 border-2 border-green-500 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce">
-                <span className="text-5xl">🔔</span>
+              <style>{`
+                @keyframes flash-red {
+                  0%, 100% { background-color: #dc2626; }
+                  50% { background-color: #450a0a; }
+                }
+                .flash-bg { animation: flash-red 1s ease-in-out infinite; }
+              `}</style>
+              <div className="fixed inset-0 flash-bg flex items-center justify-center p-4 z-50">
+                <div className="text-center">
+                  <div className="w-28 h-28 bg-white/20 border-4 border-white rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce">
+                    <span className="text-6xl">🔔</span>
+                  </div>
+                  {numeroPedido && (
+                    <p className="text-8xl font-black text-white mb-3" style={{ textShadow: '0 0 30px rgba(0,0,0,0.5)' }}>#{numeroPedido}</p>
+                  )}
+                  <h1 className="text-4xl font-black text-white mb-3" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>¡PEDIDO LISTO!</h1>
+                  <p className="text-white/90 text-xl font-bold mb-1">Retiralo en el mostrador</p>
+                  <p className="text-white/60 text-sm">{config.nombre_negocio}</p>
+                  <p className="text-white/80 text-lg mt-3">Total: <strong className="text-white text-xl">${total.toLocaleString()}</strong></p>
+                  <button onClick={() => { setCart([]); setPedidoId(null); setPaso('menu') }}
+                    className="mt-8 bg-white/20 hover:bg-white/30 text-white font-bold rounded-2xl px-8 py-3 text-sm transition border border-white/30">
+                    Volver al menú
+                  </button>
+                </div>
               </div>
-              {numeroPedido && (
-                <p className="text-6xl font-black text-green-400 mb-2">#{numeroPedido}</p>
-              )}
-              <h1 className="text-3xl font-black text-white mb-2">¡Tu pedido está listo!</h1>
-              <p className="text-green-400 text-lg font-semibold mb-1">Retiralo en el mostrador</p>
-              <p className="text-gray-400 text-sm">{mesaNombre} · {config.nombre_negocio}</p>
-              <p className="text-gray-400 text-sm mt-2">Total: <strong className="text-white text-lg">${total.toLocaleString()}</strong></p>
-              <button onClick={() => { setCart([]); setPedidoId(null); setPaso('menu') }}
-                className="mt-8 text-xs text-orange-400 hover:text-orange-300 transition">
-                Volver al menú
-              </button>
             </>
           ) : (
             <>
@@ -307,9 +324,10 @@ export default function MenuMesaPage() {
                 </div>
               </div>
 
-              <div className="mt-8 bg-[#181818] border border-[#252525] rounded-2xl p-4">
-                <p className="text-xs text-gray-500">
-                  Dejá esta pantalla abierta y te avisamos con un sonido cuando tu pedido esté listo para retirar.
+              <div className="mt-8 bg-[#181818] border border-[#252525] rounded-2xl p-4 space-y-2">
+                <p className="text-sm text-orange-400 font-semibold">📱 No cierres esta pantalla</p>
+                <p className="text-xs text-gray-400">
+                  Te vamos a avisar con una alarma, vibración y la pantalla en rojo cuando tu pedido esté listo para retirar.
                 </p>
               </div>
 
