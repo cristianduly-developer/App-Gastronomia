@@ -90,6 +90,7 @@ export default function ConfiguracionPage() {
       usa_qr:                  form.usa_qr,
       usa_qr_pedidos:          form.usa_qr_pedidos,
       qr_auto_aceptar:         form.qr_auto_aceptar,
+      qr_cliente_retira:       form.qr_cliente_retira,
       tiempo_entrega_estimado: form.tiempo_entrega_estimado || null,
       logo_url:                form.logo_url,
     }).eq('local_id', localId)
