@@ -28,6 +28,31 @@ const TIPO_LABELS: Record<string, string> = {
   restaurante: 'Restaurante', cafeteria: 'Cafetería', otro: 'Gastronomía',
 }
 
+const FOOD_GIFS: { keywords: string[]; emoji: string; label: string; gif?: string }[] = [
+  { keywords: ['pizza'], emoji: '🍕', label: 'Preparando tu pizza', gif: '/gifs/pizza.gif' },
+  { keywords: ['hamburguesa', 'burger', 'hamburgesa'], emoji: '🍔', label: 'Preparando tu hamburguesa', gif: '/gifs/hamburguesa.gif' },
+  { keywords: ['asado', 'parrilla', 'vacío', 'entraña', 'costilla', 'tira de asado'], emoji: '🥩', label: 'Preparando tu asado', gif: '/gifs/asado.gif' },
+  { keywords: ['pancho', 'hot dog'], emoji: '🌭', label: 'Preparando tu pancho', gif: '/gifs/pancho.gif' },
+  { keywords: ['choripan', 'chori', 'chorizo'], emoji: '🔥', label: 'Preparando tu choripan', gif: '/gifs/choripan.gif' },
+  { keywords: ['sandwich', 'sándwich', 'tostado'], emoji: '🥪', label: 'Preparando tu sándwich', gif: '/gifs/sandwich.gif' },
+  { keywords: ['milanesa', 'milanga', 'mila'], emoji: '🍗', label: 'Preparando tu milanesa', gif: '/gifs/milanesa.gif' },
+  { keywords: ['empanada'], emoji: '🥟', label: 'Preparando tus empanadas', gif: '/gifs/empanada.gif' },
+  { keywords: ['café', 'cafe', 'cappuccino', 'latte', 'cortado'], emoji: '☕', label: 'Preparando tu café', gif: '/gifs/cafe.gif' },
+  { keywords: ['taco', 'burrito', 'wrap'], emoji: '🌮', label: 'Preparando tu pedido', gif: '/gifs/taco.gif' },
+  { keywords: ['sushi', 'roll', 'niguiri'], emoji: '🍣', label: 'Preparando tu sushi', gif: '/gifs/sushi.gif' },
+  { keywords: ['pasta', 'fideos', 'ñoqui', 'ravioles', 'lasagna', 'lasaña'], emoji: '🍝', label: 'Preparando tu pasta', gif: '/gifs/pasta.gif' },
+  { keywords: ['pollo', 'suprema', 'pata muslo'], emoji: '🍗', label: 'Preparando tu pollo', gif: '/gifs/pollo.gif' },
+  { keywords: ['papas', 'fritas'], emoji: '🍟', label: 'Preparando tus papas', gif: '/gifs/papas.gif' },
+]
+
+function detectFood(items: { nombre: string }[]): typeof FOOD_GIFS[number] | null {
+  const nombres = items.map((i) => i.nombre.toLowerCase()).join(' ')
+  for (const food of FOOD_GIFS) {
+    if (food.keywords.some((kw) => nombres.includes(kw))) return food
+  }
+  return null
+}
+
 export default function MenuMesaPage() {
   const params = useParams()
   const localId = params.localId as string
@@ -52,6 +77,7 @@ export default function MenuMesaPage() {
   const [estadoPedido, setEstadoPedido] = useState<'pendiente' | 'aceptado' | 'rechazado'>('pendiente')
   const [itemsListo, setItemsListo] = useState(false)
   const [pedidosAdelante, setPedidosAdelante] = useState(0)
+  const [itemsPedido, setItemsPedido] = useState<{ nombre: string }[]>([])
   const yaNotificado = useRef(false)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
@@ -204,6 +230,7 @@ export default function MenuMesaPage() {
     if (resData.clienteRetira && resData.pedidoId) {
       setPedidoId(resData.pedidoId)
       setNumeroPedido(resData.numeroDia ?? null)
+      setItemsPedido(cart.map((i) => ({ nombre: i.nombre })))
       setEstadoPedido('pendiente')
       setItemsListo(false)
       yaNotificado.current = false
@@ -295,14 +322,30 @@ export default function MenuMesaPage() {
             </>
           ) : (
             <>
-              <div className="w-20 h-20 bg-orange-900/30 border border-orange-700 rounded-full flex items-center justify-center mx-auto mb-5">
-                <span className="text-4xl animate-pulse">🍳</span>
-              </div>
+              {(() => {
+                const food = detectFood(itemsPedido)
+                const gifUrl = food?.gif
+                const hasGif = false // cambiar a true cuando subas los GIFs a /public/gifs/
+                return hasGif && gifUrl ? (
+                  <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-5 border-2 border-orange-600">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={gifUrl} alt="Preparando" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 bg-orange-900/30 border border-orange-700 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <span className="text-4xl animate-pulse">{food?.emoji ?? '🍳'}</span>
+                  </div>
+                )
+              })()}
               {numeroPedido && (
                 <p className="text-5xl font-black text-orange-400 mb-2">#{numeroPedido}</p>
               )}
               <h1 className="text-2xl font-bold text-white mb-2">
-                {estadoPedido === 'pendiente' ? 'Pedido enviado' : 'Preparando tu pedido'}
+                {(() => {
+                  const food = detectFood(itemsPedido)
+                  if (estadoPedido === 'pendiente') return 'Pedido enviado'
+                  return food?.label ?? 'Preparando tu pedido'
+                })()}
               </h1>
               <p className="text-gray-400 text-sm mb-1">{mesaNombre} · {config.nombre_negocio}</p>
 
